@@ -1,0 +1,30 @@
+.dropdown-toggle:focus {
+  outline: none;
+}
+
+/* Personalize outros estilos conforme necessário */
+.dropdown-toggle {
+  background-color: #116dca00;
+  position: absolute;
+  z-index: 1;
+  /* Adicione mais estilos conforme desejado */
+  border-radius: 0;
+  outline: none;
+  border: rgb(22, 125, 227);
+  font-size: 0.84rem;
+  color: #1f1f1f;
+}
+
+.dropdown-toggle:hover {
+  background-color: #315f8c;
+  z-index: 1;
+  /* Adicione mais estilos conforme desejado */
+
+  outline: none;
+}
+.dropdown-toggle:active {
+  background-color: rgb(22, 125, 227);
+  z-index: 1;
+  /* Adicione mais estilos conforme desejado */
+  outline: none;
+}
