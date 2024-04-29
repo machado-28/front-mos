@@ -318,7 +318,6 @@ export default function DetalharPedido() {
   tresMesesAtras.setMonth(hoje.getMonth() - 3);
 
   const schemaVisto = z.object({
-
     dataEmissao: z.coerce
       .date()
       .min(tresMesesAtras, "Data não pode ser mais do que 3 meses no passado")
@@ -344,25 +343,28 @@ export default function DetalharPedido() {
   const [status, setStatus] = useState([]);
   const [fileSize, setFileSize] = useState(0);
   const [error, setError] = useState("");
-  const [loadingVisto, setLoadingVisto] = useState(false)
-  const [anexoId, setAnexoId] = useState(null)
+  const [loadingVisto, setLoadingVisto] = useState(false);
+  const [anexoId, setAnexoId] = useState(null);
 
   async function registarVisto(data) {
     data.processoId = processoId;
     data.tipoVistoId = tipoVistoId;
     data.anexoId = anexoId;
-    setLoadingVisto(prev => !prev)
-    await api.add("visto", data).then((res) => {
-      if (res.status == 201) {
-        return Notify(res?.data?.message)
-      }
-      return Notify(resp?.data?.message)
-    }).catch(() => {
-      NotifyError("Operação cancelada pelo sistema")
-    }).finally(() => {
-      setLoadingVisto(prev => !prev)
-
-    })
+    setLoadingVisto((prev) => !prev);
+    await api
+      .add("visto", data)
+      .then((res) => {
+        if (res.status == 201) {
+          return Notify(res?.data?.message);
+        }
+        return Notify(resp?.data?.message);
+      })
+      .catch(() => {
+        NotifyError("Operação cancelada pelo sistema");
+      })
+      .finally(() => {
+        setLoadingVisto((prev) => !prev);
+      });
   }
   const formatFileSize = (sizeInBytes) => {
     const units = ["B", "KB", "MB", "GB", "TB"];
@@ -400,25 +402,17 @@ export default function DetalharPedido() {
         setFileSize(fileSizeInKB);
         setError("");
         const response = await api
-          .add(
-            `upload/one`,
-            formData
-          ).then((resp) => {
-
+          .add(`upload/one`, formData)
+          .then((resp) => {
             if (resp?.status == 201) {
-              setAnexoId(prev => resp?.data?.id)
+              setAnexoId((prev) => resp?.data?.id);
               console.log("FICHE", resp);
             }
           })
           .catch(({ error }) => {
-
             NotifyError("Erro ao enviar o arquivo:", error);
           });
-
-
       }
-
-
     }
   };
 
@@ -456,9 +450,7 @@ export default function DetalharPedido() {
                 id="recipient-numerro"
               />
             </div>
-            {errors?.numero && (
-              <div className="text-light bg-danger">{errors?.numero.message}</div>
-            )}
+            {errors?.numero && <div className="text-light bg-danger">{errors?.numero.message}</div>}
             <div className="mb-3">
               <label for="recipient-dataEmissao" className="col-form-label">
                 Data de Emissão
@@ -506,11 +498,13 @@ export default function DetalharPedido() {
               <CButton color="secondary" onClick={() => setVisible(false)}>
                 Cancelar
               </CButton>
-              {
-                loadingVisto ? <CSpinner></CSpinner> : <CButton type="submit" color="success">
+              {loadingVisto ? (
+                <CSpinner></CSpinner>
+              ) : (
+                <CButton type="submit" color="success">
                   Registar
                 </CButton>
-              }
+              )}
             </CModalFooter>
           </form>
         </CModalBody>
@@ -587,6 +581,15 @@ export default function DetalharPedido() {
                     APAGAR
                   </StyledButton>
                 </Link>
+                <Link to={`#`}>
+                  <StyledButton
+                    onClick={() => hadleRecusar(processo?.id)}
+                    variant="contained"
+                    color="warning"
+                  >
+                    RECUSAR
+                  </StyledButton>
+                </Link>
 
                 {loadingDocumento ? (
                   <CSpinner></CSpinner>
@@ -607,7 +610,7 @@ export default function DetalharPedido() {
                 </Link>
               </div>
               <div className="btn-group" role="group" aria-label="Basic radio toggle button group">
-                {statusId == 2 && fazeId == 1 ? (
+                {statusId == 5 && fazeId == 4 ? (
                   <StyledButton
                     onClick={() => setVisible((prev) => true)}
                     variant="contained"
@@ -667,7 +670,10 @@ export default function DetalharPedido() {
                   <strong className="text-primary">{processo?.numero}</strong>
                 </p>
                 <article style={{ height: "12vh", width: "6vw" }}>
-                  <Avatar className="h-100 w-100" src={processo?.documentos?.[4]?.anexo?.url} ></Avatar>
+                  <Avatar
+                    className="h-100 w-100"
+                    src={processo?.documentos?.[4]?.anexo?.url}
+                  ></Avatar>
                 </article>
               </div>
             </div>
@@ -684,10 +690,7 @@ export default function DetalharPedido() {
             <strong>Data de entrada:</strong> {new Date(processo?.createdAt).toLocaleDateString()}{" "}
             <br></br>
             <strong>Descrição:</strong>
-            <i>
-              {processo?.fazeActual?.descricao}
-            </i>{" "}
-            <br></br>
+            <i>{processo?.fazeActual?.descricao}</i> <br></br>
           </p>
           <Box py="12px" />
           <p>

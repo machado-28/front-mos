@@ -18,14 +18,6 @@ export const navigations = [
       {
         name: "SME",
         path: "/processos/sme"
-      },
-      {
-        name: "Concluídos",
-        path: "/processos/concluidos"
-      },
-      {
-        name: "Processos em atraso",
-        path: "/processos/atrasados"
       }
     ]
   },

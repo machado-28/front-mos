@@ -107,7 +107,7 @@ const AppButtonRoot = styled("div")(({ theme }) => ({
   "& .button": { margin: theme.spacing(1) },
   "& .input": { display: "none" }
 }));
-export default function ListVisto() {
+export default function ListActivos() {
   const { palette } = useTheme();
   const bgError = palette.error.main;
   const bgPrimary = palette.primary.main;
@@ -119,248 +119,150 @@ export default function ListVisto() {
   const handleChangePage = (_, newPage) => {
     setPage(newPage);
   };
-  const api = useApi();
 
+  const api = useApi();
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
-
   const [filtroStatus, setFiltroStatus] = useState(0);
-
   function handleFiltroStatus(e) {
     setFiltroStatus((prev) => e);
   }
 
-  const [pedidos, setPedidos] = useState([]);
-  const [tipoDeVistos, setTipoDeVisto] = useState([]);
-  const [entidades, setEntidade] = useState([]);
-  const [statusPedidos, setStatusDePedidos] = useState([]);
+  const [statusvistos, setStatusDevistos] = useState([]);
   const fSize = "0.65rem";
-  const [totalPedidoSubmetido, setTotalPedidoSubmetido] = useState(0);
-  const [totalPedidoCancelados, setTotalPedidoCancelados] = useState(0);
-  const [totalPedidoMIREMPET, setTotalMIREMPET] = useState(0);
-  const [totalPedidoSME, setTotalStotalPedidoSME] = useState(0);
-  const [tipoId, setTipoId] = useState(null);
+  const [totalvistosActivos, setTotalvistoActivos] = useState(0);
+  const [totalVistosCancelados, setTotalVistoCancelados] = useState(0);
+  const [totalVistosExpirados, setTotalVistoExpirados] = useState(0);
   const [tipoVistoId, setTipoVistoId] = useState(null);
-  const [statusId, setStatusId] = useState(null);
-  const [fazeId, setFazeId] = useState(null);
-  const [pedidoId, setPedidoId] = useState(1);
-  const [fazes, setFazes] = useState([]);
-  const [tituloEntidade, setTituloEntidade] = useState("Faze/Entidade");
-  const [tituloStatus, setTituloStatus] = useState("Status");
 
   const buscarRelario = async () => {
     try {
-      await api.list("pedido-emissao/count").then((resp) => {
-        setTotalPedidoSubmetido(resp?.data?.total);
+      await api.list("vistos/expirados").then((resp) => {
+        setTotalVistoExpirados(resp?.data?.total);
       });
 
-      await api.listQuery(`pedido-emissao/count?statusId=7`).then((resp) => {
-        setTotalPedidoCancelados(resp?.data?.total);
+      await api.listQuery(`vistos/cancelados`).then((resp) => {
+        setTotalVistoCancelados(resp?.data?.total);
       });
 
-      await api.listQuery(`pedido-emissao/count?fazeId=2`).then((resp) => {
-        setTotalMIREMPET(resp?.data?.total);
-      });
-
-      await api.listQuery(`pedido-emissao/count?fazeId=4`).then((resp) => {
-        setTotalStotalPedidoSME(resp?.data?.total);
+      await api.listQuery(`vistos/activos`).then((resp) => {
+        setTotalvistoActivos(resp?.data?.total);
       });
     } catch (error) {
       NotifyError(error);
     }
   };
 
-  async function buscarStatus() {
+  const [loadingVisto, setLoadingVisto] = useState(false);
+  const [vistos, setVistos] = useState([]);
+
+  async function ListarVisto() {
     try {
-      if (fazeId !== null) {
-        await api.listQuery(`status-de-pedido/${fazeId}`).then((resp) => {
-          console.log("STATUS DE DAS FAZES", resp);
-          const status = resp?.data?.[0]?.status || [];
-          setStatusDePedidos(status);
-        });
-      }
-      await api.listQuery(`status-de-pedido/1`).then((resp) => {
-        console.log(resp);
-        const status = resp?.data?.[0]?.status || [];
-        setStatusDePedidos(status);
-      });
-    } catch (error) {
-      NotifyError("algo deu errado:" + error);
-    }
-  }
-  useEffect(() => {
-    buscarStatus();
-  }, [statusId, fazeId, tipoVistoId, tipoId]);
-  const [loadPedido, setLoadingPedido] = useState(false);
-  async function ListarPedidos() {
-    try {
-      if (fazeId !== null && statusId === null && tipoVistoId === null) {
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list?fazeId=${fazeId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-      if (fazeId !== null && statusId !== null && tipoVistoId === null) {
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list?fazeId=${fazeId}&statusId=${statusId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-      if (fazeId !== null && statusId === null && tipoVistoId !== null) {
-        console.log("VEIO");
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list?fazeId=${fazeId}&tipoVistoId=${tipoVistoId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-
-      if (fazeId === null && statusId === null && tipoVistoId !== null) {
-        console.log("tipo de visto", tipoVistoId);
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list?tipoVistoId=${tipoVistoId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-
-      if (fazeId === null && statusId !== null && tipoVistoId === null) {
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list?statusId=${statusId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-      if (fazeId === null && statusId !== null && tipoVistoId !== null) {
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list?tipoVistoId=${tipoVistoId}&statusId=${statusId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-
-      if (fazeId === null && statusId === null && tipoVistoId === null) {
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-    } catch (error) {
-      NotifyError("algo deu errado:" + error);
-    }
-  }
-
-  useEffect(() => {
-    ListarPedidos();
-  }, [statusId, fazeId, tipoVistoId, tipoId]);
-
-  async function buscarEntidade() {
-    try {
+      setLoadingVisto((prev) => !prev);
       await api
-        .listQuery(`fazes`)
-        .then((resp) => {
-          if (resp.status !== 200) {
-            return NotifyError("algo deu errado:" + resp.status);
+        .listQuery("vistos")
+        .then((res) => {
+          if (res.status == 200) {
+            setVistos((prev) => res?.data?.vistos);
           }
-          const entidades = resp?.data?.fazes || [];
-          console.log("Entidades", resp);
-          setEntidade(entidades);
         })
-        .catch((err) => {
-          return NotifyError("algo deu errado:" + err);
+        .finally(() => {
+          setLoadingVisto((prev) => !prev);
         });
     } catch (error) {
-      return NotifyError("algo deu errado:" + error);
+      NotifyError("algo deu errado:" + error);
+    }
+  }
+
+  async function ListarVistoActivos() {
+    try {
+      setLoadingVisto((prev) => !prev);
+      await api
+        .listQuery("vistos/actived")
+        .then((res) => {
+          if (res.status == 200) {
+            setVistos((prev) => res?.data?.vistos);
+          }
+        })
+        .finally(() => {
+          setLoadingVisto((prev) => !prev);
+        });
+    } catch (error) {
+      NotifyError("algo deu errado:" + error);
+    }
+  }
+
+  async function ListarVistoExpirados() {
+    try {
+      setLoadingVisto((prev) => !prev);
+      await api
+        .listQuery("vistos/expired")
+        .then((res) => {
+          if (res.status == 200) {
+            setVistos((prev) => res?.data?.vistos);
+          }
+        })
+        .finally(() => {
+          setLoadingVisto((prev) => !prev);
+        });
+    } catch (error) {
+      NotifyError("algo deu errado:" + error);
+    }
+  }
+
+  async function ListarVistoCancelados() {
+    try {
+      setLoadingVisto((prev) => !prev);
+      await api
+        .listQuery("vistos")
+        .then((res) => {
+          if (res.status == 200) {
+            setVistos((prev) => res?.data?.vistos);
+          }
+        })
+        .finally(() => {
+          setLoadingVisto((prev) => !prev);
+        });
+    } catch (error) {
+      NotifyError("algo deu errado:" + error);
     }
   }
 
   useEffect(() => {
-    buscarEntidade();
-  }, [statusId, fazeId, tipoVistoId, tipoId]);
-
+    ListarVisto();
+  }, []);
+  async function gerarPDFGeral() {
+    setLoadingDocumento((prev) => !prev);
+    await api.documento("gerarPDF/visto/geral", vistos).finally(() => {
+      setLoadingDocumento((prev) => !prev);
+    });
+  }
   useEffect(() => {
     buscarRelario({});
   }, []);
 
-  async function actualizarFaze() {
-    await api.edit(`visto/?fazeId=${fazeId}`);
-  }
-
   const cardList = [
     {
-      name: "Submetidos",
-      amount: totalPedidoSubmetido,
+      name: "Total",
+      amount: vistos?.length,
       Icon: Group,
-      color: "info"
+      color: "sucess"
     },
     {
-      name: "SME",
-      amount: totalPedidoSME,
-      Icon: AttachMoney
+      name: "Activos",
+      amount: totalvistosActivos,
+      Icon: Group,
+      color: "sucess"
     },
-    { name: "MIREMPET ", amount: totalPedidoMIREMPET, Icon: Store },
-    { name: "Cancelados ", amount: totalPedidoCancelados, Icon: Store }
+    {
+      name: "Expirados",
+      amount: totalVistosExpirados,
+      Icon: AttachMoney,
+      color: "warning"
+    },
+    { name: "Cancelados", color: "danger", amount: totalVistosCancelados, Icon: Store }
   ];
 
   const renderColorStatus = ({ id, nome }) => {
@@ -427,113 +329,29 @@ export default function ListVisto() {
     <AppButtonRoot>
       <SimpleCard>
         <div className="w-100 d-flex  justify-content-between">
-          <Title>CONTROLO DE VISTO</Title>
+          <Title>VISTOS NO ACTIVO</Title>
           <div>
-            <Link to={"/pedidos/add"}>
-              <StyledButton variant="contained" color="info">
-                Gerar Relatorio PDF <Download></Download>
-              </StyledButton>
-            </Link>
+            <StyledButton
+              onClick={async () => await gerarPDFGeral()}
+              variant="contained"
+              color="info"
+            >
+              Gerar Relatorio PDF <Download></Download>
+            </StyledButton>
           </div>
         </div>
       </SimpleCard>
-      <Box pt={1}>{/* <Campaigns /> */}</Box>
-
-      <ContentBox className="analytics h-auto">
-        <StatCardsLine cardList={cardList}></StatCardsLine>
-      </ContentBox>
-
-      <Box pt={1}></Box>
 
       <Card elevation={3} sx={{ pt: "10px", mb: 3 }}>
         <CContainer className="d-flex justify-content-between">
-          <div className="btn-group" role="group" aria-label="Basic radio toggle button group">
+          <div>
             <div className="d-flex aling-items-center justify-content-center flex-column">
-              <div>
-                <CDropdown style={styleDropdown}>
-                  <CDropdownToggle style={styleDropdown}>{tituloStatus}</CDropdownToggle>
-                  <CDropdownMenu style={styleDropdown}>
-                    <CDropdownItem
-                      onClick={() => {
-                        setStatusId((prev) => null);
-                        setTituloStatus((prev) => "Status");
-                      }}
-                      href="#"
-                    >
-                      Todos
-                    </CDropdownItem>
-                    {statusPedidos?.map((status) => (
-                      <CDropdownItem
-                        onClick={() => {
-                          setStatusId(status?.id);
-                          setTituloStatus((prev) => status?.nome);
-                        }}
-                        href="#"
-                      >
-                        {status?.nome}
-                      </CDropdownItem>
-                    ))}
-                  </CDropdownMenu>
-                  <CFormText>
-                    <CFormInput placeholder=" pesquise: ex.: António Machado"></CFormInput>
-                  </CFormText>
-                </CDropdown>
-              </div>
-
               <CRow></CRow>
             </div>
           </div>
-
-          <div role="group" aria-label="Basic radio toggle button group flex-0">
-            <StyledButton
-              style={{ borderRadius: 0 }}
-              onClick={() => setTipoVistoId((prev) => null)}
-              className="m-0"
-              variant={tipoVistoId === null ? "contained" : "outlined"}
-              color="primary"
-            >
-              Todos
-            </StyledButton>
-            <StyledButton
-              style={{ borderRadius: 0 }}
-              onClick={() => setTipoVistoId((prev) => 1)}
-              className="m-0"
-              variant={tipoVistoId === 1 ? "contained" : "outlined"}
-              color="primary"
-            >
-              Turismo
-            </StyledButton>
-            <StyledButton
-              style={{ borderRadius: 0 }}
-              className="m-0"
-              onClick={() => setTipoVistoId((prev) => 2)}
-              variant={tipoVistoId === 2 ? "contained" : "outlined"}
-              color="primary"
-            >
-              Trabalho
-            </StyledButton>
-            <StyledButton
-              onClick={() => setTipoVistoId((prev) => 3)}
-              style={{ borderRadius: 0 }}
-              className="m-0"
-              variant={tipoVistoId === 3 ? "contained" : "outlined"}
-              color="primary"
-            >
-              Curta Duração
-            </StyledButton>{" "}
-            <StyledButton
-              onClick={() => setTipoVistoId((prev) => 4)}
-              style={{ borderRadius: 0 }}
-              className="m-0"
-              variant={tipoVistoId === 4 ? "contained" : "outlined"}
-              color="primary"
-            >
-              Fronteira
-            </StyledButton>
-          </div>
         </CContainer>
         <CardHeader>
-          <Link to={"/pedidos/add"}></Link>
+          <Link to={"/vistos/add"}></Link>
         </CardHeader>
 
         <Box overflow="auto">
@@ -541,33 +359,26 @@ export default function ListVisto() {
             <TableHead>
               <TableRow>
                 <TableCell colSpan={2} sx={{ px: 2 }}>
-                  Nº proc.
+                  Nº
                 </TableCell>
-
-                <TableCell colSpan={2} sx={{ px: 0 }}>
-                  Nº Pass.
-                </TableCell>
-                <TableCell colSpan={4} sx={{ px: 2 }}>
+                <TableCell colSpan={4} sx={{ px: 0 }}>
                   Cliente
                 </TableCell>
-
-                <TableCell colSpan={2} sx={{ px: 0 }}>
-                  Tel.
-                </TableCell>
-                <TableCell colSpan={2} sx={{ px: 0 }}>
-                  Entidade/Faze
-                </TableCell>
-                <TableCell colSpan={2} sx={{ px: 0 }}>
+                <TableCell colSpan={4} sx={{ px: 2 }}>
                   Visto
                 </TableCell>
-                <TableCell colSpan={2} sx={{ px: 0 }}>
-                  Data Subtd.
-                </TableCell>
+
                 <TableCell colSpan={2} sx={{ px: 0 }}>
                   Status
                 </TableCell>
                 <TableCell colSpan={2} sx={{ px: 0 }}>
-                  data
+                  Data Emissão.
+                </TableCell>
+                <TableCell colSpan={2} sx={{ px: 0 }}>
+                  Data Validade
+                </TableCell>
+                <TableCell colSpan={2} sx={{ px: 0 }}>
+                  Dat.Registo
                 </TableCell>
                 <TableCell colSpan={1} sx={{ px: 0 }}>
                   Acções
@@ -576,21 +387,16 @@ export default function ListVisto() {
             </TableHead>
 
             <TableBody>
-              {loadPedido ? (
+              {loadingVisto ? (
                 <CSpinner></CSpinner>
               ) : (
                 <>
-                  {pedidos
+                  {vistos
                     ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     ?.map((visto, index) => (
                       <TableRow key={index} hover>
                         <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                           <Paragraph style={{ fontSize: "0.60rem" }}>{visto?.numero}</Paragraph>
-                        </TableCell>
-                        <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                          <Paragraph style={{ fontSize: fSize }}>
-                            {visto?.requerente?.Documentos?.[0]?.numero}
-                          </Paragraph>
                         </TableCell>
                         <TableCell
                           colSpan={4}
@@ -599,39 +405,38 @@ export default function ListVisto() {
                         >
                           <Box display="flex" alignItems="center" gap={2}>
                             <Paragraph style={{ fontSize: fSize }}>
-                              {visto?.requerente?.nome}
+                              {visto?.processo?.requerente?.nome}
                             </Paragraph>
                           </Box>
                         </TableCell>
-
-                        <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                          <Paragraph style={{ fontSize: fSize }}>
-                            {visto?.fazeActual?.nome}
-                          </Paragraph>
-                        </TableCell>
-                        <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                          <Paragraph style={{ fontSize: fSize }}>
-                            {visto?.requerente?.email}
-                          </Paragraph>
-                        </TableCell>
-                        <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                        <TableCell
+                          colSpan={4}
+                          align="left"
+                          sx={{ px: 0, textTransform: "capitalize" }}
+                        >
                           {renderColorVisto({
-                            id: visto?.tipoVisto?.id,
-                            nome: visto?.tipoVisto?.nome
+                            id: visto?.processo?.tipoVisto?.id,
+                            nome: visto?.processo?.tipoVisto?.nome
                           })}
                         </TableCell>
-                        <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                          <Paragraph style={{ fontSize: fSize }}>
-                            {formatDateDifference(new Date(visto?.createdAt))}
-                          </Paragraph>
-                        </TableCell>
 
                         <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                          {renderColorStatus({
+                          {renderColorVisto({
                             id: visto?.statusActual?.id,
                             nome: visto?.statusActual?.nome
                           })}
                         </TableCell>
+                        <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                          <Paragraph style={{ fontSize: fSize }}>
+                            {new Date(visto?.dataEmissao).toLocaleDateString()}
+                          </Paragraph>
+                        </TableCell>
+                        <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                          <Paragraph style={{ fontSize: fSize }}>
+                            {new Date(visto?.dataValidade).toLocaleDateString()}
+                          </Paragraph>
+                        </TableCell>
+
                         <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                           <Paragraph style={{ fontSize: fSize }}>
                             {formatDateDifference(new Date(visto?.createdAt))}
@@ -642,16 +447,14 @@ export default function ListVisto() {
                           <CFormSelect
                             style={{ fontSize: "12px", minWidth: "6.45rem" }}
                             id="validationServer04"
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               if (e.target.value == 1) {
                                 return goto(
                                   `/visto/detalhe/${visto?.id}?_statusId=${visto?.statusActualId}&_fazeId=${visto?.fazeActualId}`
                                 );
                               }
                               if (e.target.value == 2) {
-                                return goto(
-                                  `/visto/detalhe/${visto?.id}?_statusId=${visto?.statusActualId}&_fazeId=${visto?.fazeActualId}`
-                                );
+                                await gerarPDF();
                               }
                               console.log(e.target.value);
                             }}
@@ -674,7 +477,7 @@ export default function ListVisto() {
             page={page}
             component="div"
             rowsPerPage={rowsPerPage}
-            count={pedidos?.length}
+            count={vistos?.length}
             onPageChange={handleChangePage}
             rowsPerPageOptions={[5, 10, 25]}
             onRowsPerPageChange={handleChangeRowsPerPage}

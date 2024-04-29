@@ -54,7 +54,7 @@ import { ContentBox } from "app/views/dashboard/Analytics";
 import StatCards from "app/views/dashboard/shared/StatCards";
 // import { ChartLine } from "./ChartLine";
 import StatCardsLine from "app/views/dashboard/shared/StatCardsLine";
-import { NotifyError } from "app/utils/toastyNotification";
+import { Notify, NotifyError } from "app/utils/toastyNotification";
 import { formatDateDifference } from "app/utils/validate";
 import paletaCor from "app/utils/paletaCor";
 
@@ -132,15 +132,45 @@ export default function ListarProcessoMIREMPET() {
     setFiltroStatus((prev) => e);
   }
 
+  async function Aprovar(id) {
+    await api
+      .editQuery(`processo/${id}?statusId=5`)
+      .then((res) => {
+        if (res.status == 200) {
+          Notify(res?.data?.message);
+        }
+      })
+      .catch((err) => {
+        NotifyError("Erro ao realizar esta operação");
+        console.log(err);
+      });
+  }
+
+  async function Recusar(id) {
+    setLoadingPedido(true);
+    await api
+      .editQuery(`processo/${id}?statusId=6`)
+      .then((res) => {
+        if (res.status == 200) {
+          Notify(res?.data?.message);
+        }
+      })
+      .catch((err) => {
+        NotifyError("Erro ao realizar esta operação");
+        console.log(err);
+      })
+      .finally(() => {
+        setLoadingPedido(false);
+      });
+  }
   const [pedidos, setPedidos] = useState([]);
   const [tipoDeVistos, setTipoDeVisto] = useState([]);
   const [entidades, setEntidade] = useState([]);
   const [statusPedidos, setStatusDePedidos] = useState([]);
   const fSize = "0.65rem";
   const [totalPedidoSubmetido, setTotalPedidoSubmetido] = useState(0);
-  const [totalPedidoCancelados, setTotalPedidoCancelados] = useState(0);
-  const [totalPedidoMIREMPET, setTotalMIREMPET] = useState(0);
-  const [totalPedidoSME, setTotalStotalPedidoSME] = useState(0);
+  const [totalProcessosAprovados, setTotalAprovados] = useState(0);
+  const [totalProcessosRecusados, setTotalRecusados] = useState(0);
   const [tipoId, setTipoId] = useState(null);
   const [tipoVistoId, setTipoVistoId] = useState(null);
   const [statusId, setStatusId] = useState(null);
@@ -152,20 +182,16 @@ export default function ListarProcessoMIREMPET() {
 
   const buscarRelario = async () => {
     try {
-      await api.list("pedido-emissao/count").then((resp) => {
+      await api.list("pedido-emissao/count?fazeId=2").then((resp) => {
         setTotalPedidoSubmetido(resp?.data?.total);
       });
 
-      await api.listQuery(`pedido-emissao/count?statusId=7`).then((resp) => {
-        setTotalPedidoCancelados(resp?.data?.total);
+      await api.listQuery(`pedido-emissao/count?statusId=6&fazeId=2`).then((resp) => {
+        setTotalRecusados(resp?.data?.total);
       });
 
-      await api.listQuery(`pedido-emissao/count?fazeId=2`).then((resp) => {
-        setTotalMIREMPET(resp?.data?.total);
-      });
-
-      await api.listQuery(`pedido-emissao/count?fazeId=4`).then((resp) => {
-        setTotalStotalPedidoSME(resp?.data?.total);
+      await api.listQuery(`pedido-emissao/count?fazeId=2&statusId=5`).then((resp) => {
+        setTotalAprovados(resp?.data?.total);
       });
     } catch (error) {
       NotifyError(error);
@@ -174,14 +200,7 @@ export default function ListarProcessoMIREMPET() {
 
   async function buscarStatus() {
     try {
-      if (fazeId !== null) {
-        await api.listQuery(`status-de-pedido/${fazeId}`).then((resp) => {
-          console.log("STATUS DE DAS FAZES", resp);
-          const status = resp?.data?.[0]?.status || [];
-          setStatusDePedidos(status);
-        });
-      }
-      await api.listQuery(`status-de-pedido/1`).then((resp) => {
+      await api.listQuery(`status-de-pedido/2`).then((resp) => {
         console.log(resp);
         const status = resp?.data?.[0]?.status || [];
         setStatusDePedidos(status);
@@ -196,10 +215,10 @@ export default function ListarProcessoMIREMPET() {
   const [loadPedido, setLoadingPedido] = useState(false);
   async function ListarPedidos() {
     try {
-      if (fazeId !== null && statusId === null && tipoVistoId === null) {
+      if (statusId === null && tipoVistoId === null) {
         setLoadingPedido((prev) => !prev);
         await api
-          .listQuery(`pedido-emissao/list?fazeId=${fazeId}`)
+          .listQuery(`pedido-emissao/list?fazeId=2`)
           .then((resp) => {
             console.log("Pedido Recebidos", resp);
             const pedidos = resp?.data?.pedidos || [];
@@ -211,10 +230,10 @@ export default function ListarProcessoMIREMPET() {
           });
         return;
       }
-      if (fazeId !== null && statusId !== null && tipoVistoId === null) {
+      if (statusId !== null && tipoVistoId === null) {
         setLoadingPedido((prev) => !prev);
         await api
-          .listQuery(`pedido-emissao/list?fazeId=${fazeId}&statusId=${statusId}`)
+          .listQuery(`pedido-emissao/list?fazeId=2&statusId=${statusId}`)
           .then((resp) => {
             console.log("Pedido Recebidos", resp);
             const pedidos = resp?.data?.pedidos || [];
@@ -226,75 +245,11 @@ export default function ListarProcessoMIREMPET() {
           });
         return;
       }
-      if (fazeId !== null && statusId === null && tipoVistoId !== null) {
+      if (statusId === null && tipoVistoId !== null) {
         console.log("VEIO");
         setLoadingPedido((prev) => !prev);
         await api
-          .listQuery(`pedido-emissao/list?fazeId=${fazeId}&tipoVistoId=${tipoVistoId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-
-      if (fazeId === null && statusId === null && tipoVistoId !== null) {
-        console.log("tipo de visto", tipoVistoId);
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list?tipoVistoId=${tipoVistoId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-
-      if (fazeId === null && statusId !== null && tipoVistoId === null) {
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list?statusId=${statusId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-      if (fazeId === null && statusId !== null && tipoVistoId !== null) {
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list?tipoVistoId=${tipoVistoId}&statusId=${statusId}`)
-          .then((resp) => {
-            console.log("Pedido Recebidos", resp);
-            const pedidos = resp?.data?.pedidos || [];
-            console.log(pedidos);
-            setPedidos(pedidos);
-          })
-          .finally(() => {
-            setLoadingPedido((prev) => !prev);
-          });
-        return;
-      }
-
-      if (fazeId === null && statusId === null && tipoVistoId === null) {
-        setLoadingPedido((prev) => !prev);
-        await api
-          .listQuery(`pedido-emissao/list`)
+          .listQuery(`pedido-emissao/list?fazeId=2&tipoVistoId=${tipoVistoId}`)
           .then((resp) => {
             console.log("Pedido Recebidos", resp);
             const pedidos = resp?.data?.pedidos || [];
@@ -349,18 +304,21 @@ export default function ListarProcessoMIREMPET() {
 
   const cardList = [
     {
-      name: "Submetidos",
+      name: "Total",
       amount: totalPedidoSubmetido,
       Icon: Group,
       color: "info"
     },
     {
-      name: "SME",
-      amount: totalPedidoSME,
+      name: "Aprovados",
+      amount: totalProcessosAprovados,
       Icon: AttachMoney
     },
-    { name: "MIREMPET ", amount: totalPedidoMIREMPET, Icon: Store },
-    { name: "Cancelados ", amount: totalPedidoCancelados, Icon: Store }
+    {
+      name: "Recusado",
+      amount: totalProcessosRecusados,
+      Icon: AttachMoney
+    }
   ];
 
   const renderColorStatus = ({ id, nome }) => {
@@ -642,11 +600,17 @@ export default function ListarProcessoMIREMPET() {
                           <CFormSelect
                             style={{ fontSize: "12px", minWidth: "6.45rem" }}
                             id="validationServer04"
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               if (e.target.value == 1) {
                                 return goto(
                                   `/processo/detalhe/${processo?.id}?_statusId=${processo?.statusActualId}&_fazeId=${processo?.fazeActualId}`
                                 );
+                              }
+                              if (e.target.value == 2) {
+                                await Aprovar(processo?.id);
+                              }
+                              if (e.target.value == 3) {
+                                await Recusar(processo?.id);
                               }
                               console.log(e.target.value);
                             }}
@@ -655,6 +619,8 @@ export default function ListarProcessoMIREMPET() {
                             <option>selecione</option>
 
                             <option value={1}>visualisar</option>
+                            <option value={2}>Aprovar</option>
+                            <option value={3}>Recusar</option>
                           </CFormSelect>
                         </TableCell>
                       </TableRow>
