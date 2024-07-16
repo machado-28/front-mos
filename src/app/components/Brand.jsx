@@ -1,8 +1,9 @@
 import { Box, styled } from "@mui/material";
-
+import LogoURL from "./metalica.png"
 import { Span } from "./Typography";
 import { MatxLogo } from "app/components";
 import useSettings from "app/hooks/useSettings";
+import { Image } from "@mui/icons-material";
 
 // STYLED COMPONENTS
 const BrandRoot = styled(Box)(() => ({
@@ -26,9 +27,9 @@ export default function Brand({ children }) {
   return (
     <BrandRoot>
       <Box display="flex" alignItems="center">
-        <MatxLogo />
+        <img style={{ maxHeight: "40px" }} src={LogoURL}></img>
         <StyledSpan mode={mode} className="sidenavHoverShow">
-          Matx
+        
         </StyledSpan>
       </Box>
 

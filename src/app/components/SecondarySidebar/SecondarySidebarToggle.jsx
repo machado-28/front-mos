@@ -22,6 +22,8 @@ export default function SecondarySidebarToggle() {
   };
 
   return (
-   <></>
+   <>
+   <Toggle></Toggle>
+   </>
   );
 }

@@ -38,7 +38,7 @@ export default function NotFound() {
           variant="contained"
           sx={{ textTransform: "capitalize" }}
           onClick={() => navigate(-1)}>
-          Go Back
+          Voltar
         </Button>
       </JustifyBox>
     </NotFoundRoot>

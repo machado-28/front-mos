@@ -50,12 +50,12 @@ export default function DoughnutChart({ height, color = [] }) {
           normal: {
             show: false,
             position: "center", // shows the description data to center, turn off to show in right side
-            textStyle: { color: theme.palette.text.secondary, fontSize: 13, fontFamily: "roboto" },
+            textStyle: { color: theme.palette.text.primary, fontSize: 11, fontFamily: "roboto" },
             formatter: "{a}"
           },
           emphasis: {
             show: true,
-            textStyle: { fontSize: "14", fontWeight: "normal" },
+            textStyle: { fontSize: "12", fontWeight: "normal" },
             formatter: "{b} \n{c} ({d}%)"
           }
         },

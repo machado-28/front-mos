@@ -51,7 +51,7 @@ export default function StatCards({
     },
     {
       name: "Folha de Pagamento",
-      amount: "AOA | 80,500 kzs",
+      amount: "80,500 kzs",
       Icon: AttachMoney,
     },
     { name: "Faltas ", amount: "8.5% faltas", Icon: Store },
@@ -59,26 +59,20 @@ export default function StatCards({
   ],
 }) {
   return (
-    <Grid container spacing={3} sx={{ mb: "24px" }}>
-      {cardList.map(({ amount, Icon, name, path }) => (
-        <Grid item xs={12} md={6} key={name}>
-          <StyledCard elevation={6}>
+    <Grid container spacing={4} sx={{ mb: "24px" }}>
+      {cardList.map(({ amount, Icon, name, path, bgColor, color }) => (
+        <Grid item xs={8} md={4} key={name}>
+          <StyledCard style={{ maxHeight: "100", minHeight: "100" }} className={"bg-" + bgColor + " text-" + color} elevation={6}>
             <ContentBox>
-              <Icon className="icon" />
+              <Icon className="icon  " style={{ color: "#fff", width: "40px", height: "50px" }} />
 
               <Box ml="12px">
-                <Small>{name}</Small>
-                <Heading>{amount}</Heading>
+                <Small className="text-white h-2">{name}</Small>
+                <Heading className="text-white">{amount}</Heading>
               </Box>
             </ContentBox>
 
-            <Tooltip title="View Details" placement="top">
-              <Link replace={true} to={path}>
-                <IconButton>
-                  <ArrowRightAlt />
-                </IconButton>
-              </Link>
-            </Tooltip>
+
           </StyledCard>
         </Grid>
       ))}

@@ -1,0 +1,123 @@
+const { useApi } = require("app/hooks/useApi");
+const { NotifyError, Notify } = require("app/utils/toastyNotification");
+
+class Projecto {
+    async gerarPDFIndidual(projecto) {
+        const api = useApi()
+        await api.documento("projectos/pdf/individual", projecto).then((resp) => {
+            console.log("PDF GERADO", resp);
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao Emitir PDF")
+        })
+    }
+    async gerarPDFGeral(projectos) {
+        const api = useApi()
+        await api.documento("projectos/pdf/geral", projectos).then((resp) => {
+            console.log("PDF GERADO", resp);
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao Emitir PDF")
+        })
+    }
+    async buscarProjectoPorTipo({ tipoId }) {
+        const api = useApi()
+        await api.listQuery(`projectos/tipoId/${tipoId}`).then((resp) => {
+            console.log("SOLI", resp);
+
+            return resp?.data?.projectos
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao Emitir PDF")
+        })
+
+    }
+    async buscar({ tipoVistoId, clienteId, gestorInternoId, gestorExternoId, date, order, orderBy, id }) {
+        const api = useApi()
+        const projectos = await api.listQuery(`projectos?order=${order}&date=${date}&id=${id}&orderBy=${orderBy}&tipoVistoId=${tipoVistoId}&clienteId=${clienteId}&gestorInternoId=${gestorInternoId}&gestorExternoId=${gestorExternoId}`).then((resp) => {
+            console.log("%cprojectos", "font-size:xx-large;color:blue", resp);
+
+            return resp?.data?.projectos
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao buscar projectos")
+        })
+        return projectos
+    }
+    async editar({ id, data }) {
+        const api = useApi()
+        await api.edit(`projectos/${id}`, data).then((resp) => {
+            console.log("projectos", resp);
+
+            return resp?.data?.projectos
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao editar Projecto")
+        })
+
+    }
+    async contar() {
+
+        const api = useApi()
+        const data = await api.listQuery(`projectos/count`).then((resp) => {
+            console.log("projectos listy", resp);
+
+            console.log("TOTAL PROJECTO", resp?.data?.total);
+            return resp?.data?.total
+
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao Contar projectos")
+        })
+
+        return data
+    }
+    async apagar({ id }) {
+        const api = useApi()
+        await api.delete(`projectos`, id).then((resp) => {
+            console.log("projectos", resp);
+
+            return resp?.data?.message
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao apagar Projecto")
+        })
+
+    }
+    async criar(data) {
+        const api = useApi()
+        await api.add(`projectos`, data).then((resp) => {
+            console.log("projectos", resp);
+
+            return resp?.data?.projectos
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao criar Projecto")
+        })
+
+    }
+    async buscarProjectoPorStatus({ statusId }) {
+        const api = useApi()
+        await api.listQuery(`projectos/statusId/${statusId}`).then((resp) => {
+            console.log("SOLI", resp);
+
+            return resp?.data?.projectos
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao Emitir PDF")
+        })
+    }
+    async actualizarStatus({ pedidoId, statusId, descricao, }) {
+
+        const api = useApi()
+        await api.editOne(`pedidos/${pedidoId}`, { descricao, statusId }).then((resp) => {
+            console.log("ACTUALIA", resp);
+            Notify(resp?.data?.message)
+
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao Emitir PDF")
+        })
+    }
+}
+export { Projecto }

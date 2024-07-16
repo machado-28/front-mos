@@ -42,7 +42,7 @@ const IconBox = styled("div")(() => ({
   "& .icon": { fontSize: "14px" }
 }));
 
-export default function StatCards2() {
+export default function StateCardVisto() {
   const { palette } = useTheme();
   const bgError = lighten(palette.error.main, 0.85);
 

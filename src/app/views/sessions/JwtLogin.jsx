@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Card, Checkbox, Grid, TextField, Box, styled, useTheme } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { Formik } from "formik";
 import * as Yup from "yup";
 
 import useAuth from "app/hooks/useAuth";
-import { Paragraph } from "app/components/Typography";
+import { H1, Paragraph } from "app/components/Typography";
 import { useApi } from "app/hooks/useApi";
 import { NotifyError } from "app/utils/toastyNotification";
+import { useEffect } from "react";
+import { Opacity } from "@mui/icons-material";
 
 // STYLED COMPONENTS
 const FlexBox = styled(Box)(() => ({
@@ -23,18 +25,40 @@ const ContentBox = styled("div")(() => ({
 }));
 
 const StyledRoot = styled("div")(() => ({
+
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundImage: "url('https://th.bing.com/th/id/OIP.Ia4i7e6waXOE-Zf_GWiArQHaEK?rs=1&pid=ImgDetMain')",
+  minHeight: "100vh", /* Define uma altura mínima para cobrir toda a tela */
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  backgroundColor: "#1A2038",
+  backgroundSize: "cover",
+  // backgroundSize: "cover",
+  // backgroundPosition: "center",
+
+  Opacity: 0.5,
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+
+    backgroundColor: "rgba(0, 0, 0, .90)"
+
+
+  },
   minHeight: "100% !important",
   "& .card": {
     maxWidth: 800,
-    minHeight: 400,
+
     margin: "1rem",
     display: "flex",
     borderRadius: 12,
-    alignItems: "center"
+    alignItems: "center",
+    filter: "brightness(50%)",
   },
 
   ".img-wrapper": {
@@ -44,29 +68,41 @@ const StyledRoot = styled("div")(() => ({
     padding: "2rem",
     alignItems: "center",
     justifyContent: "center"
-  }
+  },
+
+  "& .card": {
+    maxWidth: 800,
+    minHeight: 400,
+    margin: "1rem",
+    display: "flex",
+    borderRadius: 12,
+    alignItems: "center",
+    // Fundo branco com opacidade para o card
+    zIndex: 1,
+
+  },
+
 }));
 
 // initial login credentials
 const initialValues = {
-  email: "jason@ui-lib.com",
-  password: "dummyPass",
+  email: "",
+  password: "",
   remember: true
 };
 
 // form field validation schema
 const validationSchema = Yup.object().shape({
   password: Yup.string()
-    .min(6, "Password must be 6 character length")
     .required("Password is required!"),
   email: Yup.string().required("Email is required!")
 });
 
 export default function JwtLogin() {
   const theme = useTheme();
-  const navigate = useNavigate();
+  const Navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
+  const { pathname } = useLocation();
   const { logar } = useApi();
 
   const handleFormSubmit = async (values) => {
@@ -74,33 +110,48 @@ export default function JwtLogin() {
     setLoading(true);
 
     try {
-      const data = await logar(values.email, values.password);
-      console.log(data, "DATAAAAAAAA");
-      if (data?.statusCode === 400) NotifyError(data?.message);
+      const data = await logar(values.email, values.password).then((res) => {
+        console.log("DADOS LOGANDO", res);
+        if (res?.status == 400) {
+          NotifyError(res?.data?.message)
+        }
+        if (res?.status == 200) {
+          console.log("200");
+          Navigate("/")
+          window.location.reload()
+          return <Navigate replace to="/dashboard/default" state={{ from: pathname }} />
+          return res
 
-      if (data?.statusCode === 500) navigate("/500");
-
-      if (data?.statusCode === 200) return navigate("/");
-
+        }
+      })
+      console.log("DATA FORA", data);
       setLoading(false);
     } catch (e) {
-      navigate("/500");
-      console.log(e);
+      if (e?.response?.status == 400) {
+        NotifyError(e?.response?.data?.message)
+      }
       setLoading(false);
     }
   };
 
   return (
-    <StyledRoot>
+    <StyledRoot className="d-flex  ">
+
+
       <Card className="card">
+
+        <h1 className="p-4">Login</h1>
+        {/* Adicionando o título aqui */}
         <Grid container>
+
           <Grid item sm={6} xs={12}>
             <div className="img-wrapper">
-              <img src="/assets/images/illustrations/dreamer.svg" width="100%" alt="" />
+              <img className="  m-4" style={{ width: 300, height: 100 }} src="http://localhost:4000/public/metalica.png"></img>
             </div>
           </Grid>
 
           <Grid item sm={6} xs={12}>
+
             <ContentBox>
               <Formik
                 onSubmit={handleFormSubmit}
@@ -149,15 +200,10 @@ export default function JwtLogin() {
                           sx={{ padding: 0 }}
                         />
 
-                        <Paragraph>Remember Me</Paragraph>
+                        <Paragraph>Lembrar</Paragraph>
                       </FlexBox>
 
-                      <NavLink
-                        to="/session/forgot-password"
-                        style={{ color: theme.palette.primary.main }}
-                      >
-                        Forgot password?
-                      </NavLink>
+
                     </FlexBox>
 
                     <LoadingButton
@@ -167,18 +213,10 @@ export default function JwtLogin() {
                       variant="contained"
                       sx={{ my: 2 }}
                     >
-                      Login
+                      Entrar
                     </LoadingButton>
 
-                    <Paragraph>
-                      Don't have an account?
-                      <NavLink
-                        to="/session/signup"
-                        style={{ color: theme.palette.primary.main, marginLeft: 5 }}
-                      >
-                        Register
-                      </NavLink>
-                    </Paragraph>
+
                   </form>
                 )}
               </Formik>
@@ -186,6 +224,7 @@ export default function JwtLogin() {
           </Grid>
         </Grid>
       </Card>
+
     </StyledRoot>
   );
 }

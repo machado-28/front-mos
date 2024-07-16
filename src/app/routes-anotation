@@ -1,0 +1,27 @@
+
+// DASHBOARD PAGE
+// const Analytics = Loadable(lazy(() => import("app/views/dashboard/Analytics")));
+// const GVisto = Loadable(lazy(() => import("app/views/dashboard/DashVisto")));
+// const AddPedido = Loadable(lazy(() => import("app/views/admin/processos/Local/SubmeterProcesso")));
+
+// const DetalharPedido = Loadable(lazy(() => import("app/views/admin/processos/DetalharPedido")));
+// const DetalharVisto = Loadable(lazy(() => import("app/views/admin/visto/controlo/DetalheVisto")));
+// const ListarDocumento = Loadable(lazy(() => import("app/views/admin/documento/ListarDocumentos")));
+// const ListProcesso = Loadable(lazy(() => import("app/views/admin/processos/ListPedidos")));
+// const ListVisto = Loadable(lazy(() => import("app/views/admin/visto/controlo/ListVisto")));
+
+
+// // processos de hoje
+// const processosNovos = Loadable(lazy(() => import("app/views/admin/processos/Novos")));
+// const processos = Loadable(lazy(() => import("app/views/admin/processos/")));
+// //processos que não foram aprovados ou recusados de um dia
+// const processosPendentes = Loadable(lazy(() => import("app/views/admin/processos/Pendentes")));
+
+// //processos que não foram aprovados | 
+// const processosProgresso = Loadable(lazy(() => import("app/views/admin/processos/Progresso")));
+
+// //processos que foram cancelados pelo cliente
+// const processosCancelados = Loadable(lazy(() => import("app/views/admin/processos/Canceladas")));
+// //processos que não foram aprovados | 
+// const processosAprovados = Loadable(lazy(() => import("app/views/admin/processos/Aprovadas")));
+

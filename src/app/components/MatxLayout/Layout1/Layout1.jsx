@@ -18,7 +18,7 @@ import { sidenavCompactWidth, sideNavWidth } from "app/utils/constant";
 // STYLED COMPONENTS
 const Layout1Root = styled(Box)(({ theme }) => ({
   display: "flex",
-  background: theme.palette.background.default
+  background: theme.palette.background.paper
 }));
 
 const ContentBox = styled(Box)(() => ({

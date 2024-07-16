@@ -1,6 +1,14 @@
 export const authRoles = {
-  sa: ["SA"], // Only Super Admin has access
-  admin: ["SA", "ADMIN"], // Only SA & Admin has access
-  editor: ["SA", "ADMIN", "EDITOR"], // Only SA & Admin & Editor has access
-  guest: ["SA", "ADMIN", "EDITOR", "GUEST"] // Everyone has access
+  adminGeral: ["ADMINISTRADOR GERAL"], // Only Super Admin has access
+  admin: ["ADMINISTRADOR GERAL", "ADMINISTRADOR"], // Only SA & Admin has access
+  administradorProjecto: ["ADMINISTRADOR GERAL", "ADMINISTRADOR", "ADMINISTRADOR DE PROJECTO"], // Everyone has access
+  gestorProjecto: ["ADMINISTRADOR GERAL", "ADMINISTRADOR", "ADMINISTRADOR DE PROJECTO", "GESTOR DE PROJECTO"], // Everyone has access
+  tecnicoProcesso: ["ADMINISTRADOR GERAL", "ADMINISTRADOR", "ADMINISTRADOR DE PROJECTO", "GESTOR DE PROJECTO"], // Everyone has access "TECNICO DE PROCESSO"],
+  cliente: ["ADMINISTRADOR GERAL", "ADMINISTRADOR", "ADMINISTRADOR DE PROJECTO", "CLIENTE"],// Everyone has access
+  gestorCliente: ["ADMINISTRADOR GERAL", "ADMINISTRADOR", "ADMINISTRADOR DE PROJECTO", "GESTOR DE PROJECTO CLIENTE", "CLIENTE"], // Everyone has access
+  visualizador: [, "ADMINISTRADOR GERAL", "ADMINISTRADOR", "ADMINISTRADOR DE PROJECTO", "GESTOR DE PROJECTO", "VISUALISADOR"],
+  secretaria: ["ADMINISTRADOR GERAL", "ADMINISTRADOR", "SECRETARIA"],
+  rh: ["ADMINISTRADOR GERAL", "ADMINISTRADOR", "RECURSOS HUMANOS"], // Only SA & Admin & Editor has access
+  gestorVisto: ["ADMINISTRADOR GERAL", "ADMINISTRADOR", "ADMINISTRADOR DE PROJECTO", "GESTOR DE VISTO"],// depreciada
+  gestorVistoSecretaria: ["ADMINISTRADOR GERAL", "ADMINISTRADOR", "GESTOR DE VISTO", "SECRETARIA"],// depreciada
 };

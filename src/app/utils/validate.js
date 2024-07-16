@@ -9,7 +9,16 @@ export const validatePersonNames =
 // Pode conter espaços em branco (mas não consecutivos), permitindo que nomes compostos sejam aceitos.
 // Não pode começar ou terminar com um espaço em branco.
 // Não pode conter caracteres especiais como números, símbolos ou caracteres de pontuação (exceto o apóstrofo para nomes como O'Connor, por exemplo).
+export function adicionarMeses(data, meses) {
+    var novaData = new Date(data);
+    novaData.setMonth(novaData.getMonth() + meses);
+    return novaData;
+}
 
+// Exemplo de uso:
+var dataAtual = new Date(); // Obtém a data atual
+var duracaoMeses = 6; // Duração em meses
+var dataValidade = adicionarMeses(dataAtual, duracaoMeses);
 export class ValidateData {
   byInterval({ date = new Date(), interval = 3 }) {
     date.setMonth(date.getMonth() + interval);

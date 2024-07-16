@@ -1,5 +1,8 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Box, Breadcrumbs, Hidden, Icon, styled, useTheme } from "@mui/material";
+import { Button } from "@coreui/coreui";
+import { CButton } from "@coreui/react";
+import { StyledButton } from "app/views/material-kit/buttons/AppButton";
 
 // STYLED COMPONENTS
 const BreadcrumbRoot = styled(Box)({
@@ -37,34 +40,28 @@ const StyledIcon = styled(Icon)({
 export default function Breadcrumb({ routeSegments }) {
   const theme = useTheme();
   const hint = theme.palette.text.hint;
-
+  const navigate = useNavigate();
+  const handleBackClick = () => {
+    navigate(-1);
+  };
   return (
     <BreadcrumbRoot>
-      {routeSegments ? (
+      {routeSegments && routeSegments.length > 0 ? (
         <Hidden xsDown>
-          <BreadcrumbName>{routeSegments[routeSegments.length - 1]["name"]}</BreadcrumbName>
+          <BreadcrumbName>{routeSegments[routeSegments.length - 1].name}</BreadcrumbName>
           <Separator>|</Separator>
         </Hidden>
       ) : null}
 
       <Breadcrumbs
-        separator={<Icon sx={{ color: hint }}>navigate_next</Icon>}
-        sx={{ display: "flex", alignItems: "center", position: "relative" }}>
-        <NavLink to="/">
-          <StyledIcon color="primary">home</StyledIcon>
-        </NavLink>
+        separator={<Icon sx={{ color: '#888' }}>navigate_next</Icon>}
+        sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
 
-        {routeSegments
-          ? routeSegments.map((route, index) => {
-              return index !== routeSegments.length - 1 ? (
-                <NavLink key={index} to={route.path}>
-                  <SubName>{route.name}</SubName>
-                </NavLink>
-              ) : (
-                <SubName key={index}>{route.name}</SubName>
-              );
-            })
-          : null}
+        <StyledButton onClick={handleBackClick}>
+          <StyledIcon color="primary">arrow_back</StyledIcon>
+        </StyledButton>
+
+         
       </Breadcrumbs>
     </BreadcrumbRoot>
   );

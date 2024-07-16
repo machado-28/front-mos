@@ -118,25 +118,10 @@ const Layout1Topbar = () => {
           <StyledIconButton onClick={handleSidebarToggle}>
             <Menu />
           </StyledIconButton>
-
-          {/* <IconBox>
-            <StyledIconButton>
-              <MailOutline />
-            </StyledIconButton>
-
-            <StyledIconButton>
-              <WebAsset />
-            </StyledIconButton>
-
-            <StyledIconButton>
-              <StarOutline />
-            </StyledIconButton>
-          </IconBox> */}
         </Box>
 
         <Box display="flex" alignItems="center">
-          <MatxSearchBox />
-
+          {/* <MatxSearchBox /> */}
           <NotificationProvider>
             <NotificationBar />
           </NotificationProvider>
@@ -145,34 +130,32 @@ const Layout1Topbar = () => {
             menuButton={
               <UserMenu>
                 <Hidden xsDown>
-                  <Span>{user?.nome}</Span>
+                  <Span> <Span>{user?.nome}</Span></Span>
+
                 </Hidden>
                 <Avatar src={user?.avatarUrl} sx={{ cursor: "pointer" }} />
               </UserMenu>
             }
           >
             <StyledItem>
+
+              <Link  >
+
+                <Span>{user?.painel?.nome}</Span>
+              </Link>
+            </StyledItem>
+
+            <StyledItem>
+
               <Link to="/">
                 <Home />
                 <Span>Home</Span>
               </Link>
             </StyledItem>
 
-            {/* <StyledItem>
-              <Link to="/page-layouts/user-profile">
-                <Person />
-                <Span>Profile</Span>
-              </Link>
-            </StyledItem> */}
-
-            {/* <StyledItem>
-              <Settings />
-              <Span>Settings</Span>
-            </StyledItem> */}
-
             <StyledItem onClick={logout}>
               <PowerSettingsNew />
-              <Span>Logout</Span>
+              <Span>Sair</Span>
             </StyledItem>
           </MatxMenu>
         </Box>
