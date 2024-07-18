@@ -3,7 +3,7 @@ import { Notify, NotifyError } from "app/utils/toastyNotification";
 import { useNavigate } from "react-router-dom";
 
 const api = axios.create({
-  baseURL: "http://localhost:4000/api/v1/"
+  baseURL: "http://localhost:4000/v1/"
 });
 
 // Adiciona um interceptador de solicitação
@@ -83,17 +83,19 @@ export const useApi = () => ({
 
     return response;
   },
-  documento: async (path, data) => {
-    const response = await api.post(path, data, {
+  documento: async (path, title = "MAPA DE CONTROLO") => {
+    const response = await api.get(path, {
       responseType: "blob" // Indica que esperamos uma resposta de arquivo binário (blob)
     });
     const blob = new Blob([response.data], { type: "application/pdf" });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "documento.pdf");
+
+    link.setAttribute("target", "blank");
     document.body.appendChild(link);
     link.click();
+    link.title = title
     link.remove();
   },
   edit: async (path, data) => {

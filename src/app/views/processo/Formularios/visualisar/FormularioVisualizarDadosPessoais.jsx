@@ -1,186 +1,323 @@
-import React from "react";
+import React, { useState } from "react";
 import {
+  CAlert,
+  CAvatar,
+  CBadge,
+  CCallout,
   CCol,
+  CForm,
   CFormInput,
+
+  CInputGroup,
+
+  CListGroup,
+
+  CListGroupItem,
 
   CRow
 } from "@coreui/react";
-import { Avatar } from "@mui/material";
+import { Avatar, Box } from "@mui/material";
+import { H3, H5, Paragraph } from "app/components/Typography";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import updateProcessoShema from "./shema/updateProcessoShema";
+import Processo from "../../util";
+import { useParams } from "react-router-dom";
+import { LoadingButton } from "@mui/lab";
+import StatCards from "app/views/dashboard/shared/StatCards";
 
-export default function FormularioVisualizarDadosPessoais({ cliente }) {
+
+
+export default function FormularioVisualizarDadosPessoais({ processo = {} }) {
+  const {
+    register,
+    reset,
+    watch,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    resolver: zodResolver(updateProcessoShema),
+    shouldFocusError: true,
+    progressive: true
+  });
+
+  const { processoId } = useParams();
+  const [loading, setLoading] = useState(false)
+  const processoClass = new Processo();
+  const [documentos, setDocumentos] = useState([])
+  async function PostData(dados) {
+
+    try {
+      console.log("FORMULARIO ", dados);
+      setLoading(true);
+      const response = await processoClass.criar(dados).then(async (response) => {
+        setLoading(false);
+        Notify(response?.data?.message);
+        window.location.reload();
+      });
+    } catch (error) {
+      NotifyError("Älgo deu Errado");
+      console.log(error);
+      setLoading(false);
+
+    }
+  }
+
+  const { processo: processoData } = processo
+  const { beneficiario: tecnico } = processoData || {}
   return (
-    <>
-     
-      <CRow>
+    <CCallout>
+      <CAlert color="warning">{processo?.descricao || " este é um formulário de visualização de processo"}</CAlert>
+      <CForm onSubmit={handleSubmit(PostData)} style={{ borderRadius: "none" }}>
+        <Box pt={4}></Box>
 
-        <CCol>
-          <CFormInput
-            type="text"
-            size="sm"
-            label="Nome Completo"
-            readOnly
-            defaultValue={cliente?.nomeCompleto}
-            aria-label="Antonio Machado"
-            aria-describedby="exampleFormControlInputHelpInline"
+        <img id="image" src={tecnico?.avatar?.url} style={{ border: "1px solid #ccc", height: 100, width: 100 }}></img>
 
-          />
-        </CCol>
-        <CCol>
-          <CFormInput
-            type="text"
-            size="sm"
-            label="Número de Passaporte"
-            readOnly
-            defaultValue={cliente?.passaporte?.numeroPassaporte}
-            aria-describedby="exampleFormControlInputHelpInline"
+        <Box pt={4}></Box>
 
-          />
-        </CCol>
-      </CRow>
-      <CRow className="mb-4">
-      </CRow>
-      <CRow>
-        <CCol>
-          <CFormInput
-            type="text"
-            size="sm"
-            label="Local de emissão"
-            readOnly
-            defaultValue={cliente?.passaporte?.entidade}
-            aria-describedby="exampleFormControlInputHelpInline"
 
-          />
-        </CCol>
-        <CCol>
-          <CFormInput
-            type="text"
-            size="sm"
-            label="Data de emissão"
-            readOnly
-            defaultValue={cliente?.passaporte?.dataEmissao}
-            aria-describedby="exampleFormControlInputHelpInline"
+        <CRow className="mb-4 mt-4">
+          <CCol md="3">
+            <CFormInput
+              type="text"
+              size="sm"
 
-          />
-        </CCol>
-        <CCol>
-          <CFormInput
-            type="text"
-            size="sm"
-            label="Data de validade"
-            readOnly
-            defaultValue={cliente?.passaporte?.dataValidade}
-            aria-describedby="exampleFormControlInputHelpInline"
+              label="ID"
+              aria-describedby="exampleFormControlInputHelpInline"
+              disabled
+              value={processoData?.numero}
 
-          />
-        </CCol>
-      </CRow>
-      <CRow className="mb-4">
-        <CCol>
-          <CFormInput
-          size="sm"
-            defaultValue={cliente?.genero}
-            id="genero"
-            aria-describedby="exampleFormControlInputHelpInline"
-            label="Genero"
-            readOnly
-          >
-          </CFormInput>
-        </CCol>
-        <CCol>
-          <CFormInput
-            id="estadoCivil"
-            size="sm"
-            defaultValue={cliente?.estadoCivil}
-            readOnly
-            label="Estado Civil"
-            aria-describedby="exampleFormControlInputHelpInline"
-          >
-          </CFormInput>
-        </CCol>
-        <CCol>
-          <CFormInput
-            defaultValue={cliente?.nacionalidade}
-            label="Nacionalidade"
-            size="sm"
-            aria-describedby="exampleFormControlInputHelpInline"
-            readOnly
-          >
-          </CFormInput>
-        </CCol>
-      </CRow>
+            />
+          </CCol>
+          <CCol  >
+            <CFormInput
+              type="text"
+              size="sm"
+              readOnly
+              label="Nome do beneficiário"
 
-      <CRow>
-        <CCol>
-          <CFormInput
-            id="paisNascimento"
-            size="sm"
-            label="País de Nascimento"
-            aria-describedby="exampleFormControlInputHelpInline"
-            defaultValue={cliente?.paisNascimento}
-            readOnly
-          >
+              value={tecnico?.nome}
+              aria-describedby="exampleFormControlInputHelpInline"
 
-          </CFormInput>
-        </CCol>
-        <CCol sm={3}>
-          <CFormInput
-            defaultValue={cliente?.municipioNascimento}
-            type="text"
-            size="sm"
-            label="Natural de ..."
-            aria-describedby="exampleFormControlInputHelpInline"
+            />
+          </CCol>
+          <CCol md="2">
+            <CFormInput
+              type="tel"
+              size="sm"
+              readOnly
+              label="Telefone"
+              aria-describedby="exampleFormControlInputHelpInline"
 
-          />
-        </CCol>
-        <CCol sm={3}>
-          <CFormInput
-            type="text"
-            size="sm"
-            label="Província de ..."
-            aria-describedby="exampleFormControlInputHelpInline"
+              value={tecnico?.telefone}
+            >
 
-          />
-        </CCol>
-        <CCol>
-          <CFormInput
-            readOnly
-            type="text"
-            size="sm"
-            defaultValue={new Date(cliente?.dataNascimento || new Date()).toDateString()}
-            label="Data de Nascimento"
-            aria-describedby="exampleFormControlInputHelpInline"
+            </CFormInput>
+          </CCol>
+          <CCol md="2">
+            <CFormInput
+              type="email"
+              size="sm"
+              readOnly
+              label="Email"
+              aria-describedby="exampleFormControlInputHelpInline"
+              value={tecnico?.email}
+            >
 
-          />
-        </CCol>
-      </CRow>
-      <CRow>
-        <CCol className="mb-4">
-          <CFormInput
-            type="text"
-            size="sm"
-            readOnly
-            id="pai"
-            aria-label=" fd"
-            label="Nome do Pai"
-            aria-describedby="exampleFormControlInputHelpInline"
-            defaultValue={cliente?.nomePai}
+            </CFormInput>
+          </CCol>
+        </CRow>
+        <Box pt={2}></Box>
+        <CRow className="mb-4">
+          <CCol>
+            <CFormInput
+              type="text"
 
-          />
-        </CCol>
-        <CCol className="mb-4">
-          <CFormInput
-            type="text"
-            size="sm"
-            id="mae"
-            defaultValue={cliente?.nomeMae}
-            aria-label="fds"
-            label="Nome Da Mãe"
-            aria-describedby="exampleFormControlInputHelpInline"
+              size="sm"
+              label="Nº do Passaporte"
+              readOnly
+              value={processoData?.passaporteNumero}
+              aria-describedby="exampleFormControlInputHelpInline"
+              text={
+                errors.passaporte?.numero && (
+                  <div className="text-light bg-danger">{errors.passaporte?.numero.message}</div>
+                )
+              }
+              required
+              {...register("passaporte.numero")}
+            >
 
-          />
-        </CCol>
-      </CRow>
-    </>
+            </CFormInput>
+          </CCol>
+          <CCol>
+            <CFormInput
+              type="text"
+              size="sm"
+              value={new Date(processoData?.passaporteDataEmissao).toLocaleDateString()}
+              label="Data de emissão"
+              aria-describedby="exampleFormControlInputHelpInline"
+              text={
+                errors.passaporte?.dataEmissao && (
+                  <div className="text-light bg-danger">{errors.passaporte?.dataEmissao.message}</div>
+                )
+              }
+              required
+              {...register("passaporte.dataEmissao")}
+            >
 
-  );
+            </CFormInput>
+          </CCol>
+          <CCol>
+            <CFormInput
+              type="text"
+              size="sm"
+
+              label="Data de validade"
+              aria-describedby="exampleFormControlInputHelpInline"
+              value={new Date(processoData?.passaporteDataValidade).toLocaleDateString()}
+
+              text={
+                errors.passaporte?.dataValidade && (
+                  <div className="text-light bg-danger">{errors.passaporte?.dataValidade.message}</div>
+                )
+              }
+              md={1}
+              required
+              {...register("passaporte.dataValidade")}
+            >
+
+            </CFormInput>
+          </CCol>
+        </CRow>
+        <CRow className="mb-4">
+          <CCol>
+            <CFormInput
+
+              value={processoData?.consulado}
+
+              label="Consulado" size="sm">
+
+            </CFormInput>
+          </CCol>
+          <CCol>
+            <CFormInput
+              value={processoData?.funcao}
+              label="Função" size="sm">
+            </CFormInput>
+          </CCol>
+          <CCol md={3}>
+            <CFormInput type="text"
+              value={new Date(processoData?.mob).toLocaleDateString()}
+
+              label="Data estimada de Chegada" size="sm">
+
+            </CFormInput>
+          </CCol>
+          <CCol>
+            <CFormInput
+              value={processoData?.projecto?.nome}
+              label="Projecto" size="sm">
+            </CFormInput>
+          </CCol>
+          <CCol>
+            <CFormInput
+              value={processoData?.localProjecto}
+              label="Local do projecto" size="sm">
+
+            </CFormInput>
+          </CCol>
+        </CRow>
+        <Box pt={2}></Box>
+        <hr></hr>
+        <H3>Filiação</H3>
+        <Box pt={1}></Box>
+        <CRow className="mb-4">
+          <CCol>
+            <CFormInput
+
+              value={processoData?.nomePai}
+
+              label="Nome Completo do Pai" size="sm">
+
+            </CFormInput>
+          </CCol>
+          <CCol>
+            <CFormInput
+              value={processoData?.paiNacionalidade}
+              label="Nacionalidade do Pai" size="sm">
+            </CFormInput>
+          </CCol>
+          <CCol md={3}>
+            <CFormInput type="text"
+              value={processoData?.nomeMae}
+
+              label="Nome Completo da Mãe" size="sm">
+
+            </CFormInput>
+          </CCol>
+          <CCol>
+            <CFormInput
+              value={processoData?.maeNacionalidade}
+              label="Nacionalidade da Mãe" size="sm">
+
+            </CFormInput>
+          </CCol>
+        </CRow>
+        <Box pt={2}></Box>
+        <hr></hr>
+        <Box pt={3}></Box>
+
+        <CRow className="mb-4">
+          <CCol>
+            <CFormInput
+
+              value={processoData?.tipoVisto?.nome}
+
+              label="Visto" size="sm">
+
+            </CFormInput>
+          </CCol>
+          <CCol>
+
+          </CCol>
+          <CCol>
+            <CFormInput
+              value={processoData?.nacionalidade}
+              label="Nacionalidade do Pai" size="sm">
+            </CFormInput>
+          </CCol>
+          <CCol md={3}>
+            <CFormInput type="text"
+              value={processoData?.genero}
+
+              label="Genero" size="sm">
+
+            </CFormInput>
+          </CCol>
+          <CCol>
+            <CFormInput
+              value={processoData?.estadoCivil}
+              label="Estado Civil" size="sm">
+            </CFormInput>
+          </CCol>
+        </CRow>
+
+        <H3>Documentos </H3>
+        <CAlert color="info">
+          <a target="blank" href={tecnico?.avatar.url}>{tecnico?.avatar?.name}</a>
+        </CAlert>
+        {
+
+          documentos?.map((doc, index) => (
+            <CAlert color="info">
+              <CListGroup>
+                <a target="blank" href={doc?.url}></a>
+              </CListGroup>
+            </CAlert>
+          ))}
+
+
+
+      </CForm>
+    </CCallout>);
 }

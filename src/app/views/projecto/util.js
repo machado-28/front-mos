@@ -32,7 +32,7 @@ class Projecto {
         })
 
     }
-    async buscar({ tipoVistoId, clienteId, gestorInternoId, gestorExternoId, date, order, orderBy, id }) {
+    async buscar({ tipoVistoId, clienteId, gestorInternoId, gestorExternoId, date, order, orderBy, id }={}) {
         const api = useApi()
         const projectos = await api.listQuery(`projectos?order=${order}&date=${date}&id=${id}&orderBy=${orderBy}&tipoVistoId=${tipoVistoId}&clienteId=${clienteId}&gestorInternoId=${gestorInternoId}&gestorExternoId=${gestorExternoId}`).then((resp) => {
             console.log("%cprojectos", "font-size:xx-large;color:blue", resp);
@@ -43,6 +43,20 @@ class Projecto {
             NotifyError("Erro ao buscar projectos")
         })
         return projectos
+    }
+    async contar({ tipoVistoId, clienteId, gestorInternoId, gestorExternoId, date, order, orderBy, id }={}) {
+
+        const api = useApi()
+        const total = await api.listQuery(`projectos/count?order=${order}&date=${date}&id=${id}&orderBy=${orderBy}&tipoVistoId=${tipoVistoId}&clienteId=${clienteId}&gestorInternoId=${gestorInternoId}&gestorExternoId=${gestorExternoId}`).then((resp) => {
+            console.log("%cprojectos total", "font-size:xx-large;color:blue", resp.data?.total);
+
+            return resp?.data?.total
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao buscar projectos")
+        })
+        return total
+
     }
     async editar({ id, data }) {
         const api = useApi()
@@ -56,22 +70,7 @@ class Projecto {
         })
 
     }
-    async contar() {
 
-        const api = useApi()
-        const data = await api.listQuery(`projectos/count`).then((resp) => {
-            console.log("projectos listy", resp);
-
-            console.log("TOTAL PROJECTO", resp?.data?.total);
-            return resp?.data?.total
-
-        }).catch((error) => {
-            console.log(error);
-            NotifyError("Erro ao Contar projectos")
-        })
-
-        return data
-    }
     async apagar({ id }) {
         const api = useApi()
         await api.delete(`projectos`, id).then((resp) => {

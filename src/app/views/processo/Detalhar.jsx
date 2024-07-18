@@ -1,7 +1,7 @@
 import { Edit, FileDownloadDone, Print, Title } from "@mui/icons-material";
 import { Avatar, Box, Button, Card } from "@mui/material";
 import { H1 } from "app/components/Typography";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import FormularioVisualizarDadosMigratorio from "./Formularios/visualisar/FormularioVisualizarDadosMigratorio";
 import FormularioVisualizarContacto from "./Formularios/visualisar/FormularioVisualizarContactos";
 import FormularioVisualizarDadosProFissionais from "./Formularios/visualisar/FormularioVisualizarDadosProFissionais";
@@ -18,14 +18,16 @@ import Resumo from "./Resumo";
 
 const { CNav, CNavItem, CNavLink, CTabContent, CTabPane, CImage, CAvatar, CCard, CCardBody, CRow, CCol, CDropdownToggle, CDropdown, CDropdownItem, CDropdownMenu, CDropdownDivider, CModal, CModalHeader, CModalTitle, CForm, CFormSelect, CButton, CModalFooter, CSpinner, CModalBody, CFormInput, CFormTextarea } = require("@coreui/react");
 const { SimpleCard } = require("app/components");
-const { useState } = require("react");
+const { useState, useEffect } = require("react");
 export default function Detalhar() {
     const [render, setRender] = useState(0);
     const [loading, setLoading] = useState(false);
     const [visibleMapa, setVisibleMapa] = useState(false);
 
     const addAprovarShema = z.object({
-        descricao: z.string()
+        descricao: z.string(),
+        statusId: z.string(),
+        stepId: z.string()
     });
     const {
         register,
@@ -41,14 +43,37 @@ export default function Detalhar() {
 
     async function actualizarStatus(data) {
         setLoading(prev => !prev)
-        data.statusId = statusToUpdateId;
-        data.pedidoId = pedidoId
+        data.processoId = processoId;
         console.log("DATAFORM", data);
         const c_pedido = new Processo();
         await c_pedido.actualizarStatus(data);
         setLoading(prev => !prev)
-        window.location.reload()
+
     }
+    const [loadingMap, setLoadingMap] = useState(false);
+
+    async function gerarFicha() {
+        setLoadingMap(prev => true)
+        const processo = new Processo();
+        await processo.gerarFicha({ processoId })
+        setLoadingMap(prev => false)
+
+    }
+
+    const [processos, setProcessos] = useState([])
+    const { processoId } = useParams()
+    const buscarProcesso = async (data) => {
+        setLoading(prev => true)
+        const processo = new Processo();
+        const res = await processo.buscar({ processoId })
+        setProcessos(prev => res.progresso[0])
+        setLoading(prev => false)
+        console.log("PROCESSOOOOOOOOOOOOOOO", res.progresso[0], processoId);
+    }
+    useEffect(() => {
+        buscarProcesso()
+    }, [])
+    const [pendente, traducao, mirex, sme, mirempet, finalizados] = [1, 2, 3, 4, 5, 6]
     return (
         <>
             <>
@@ -64,46 +89,61 @@ export default function Detalhar() {
                     </CModalHeader>
                     <CForm onSubmit={handleSubmit(actualizarStatus)}>
                         <CModalBody>
-                            <div className="d-flex COLUMN justify-content-center align-items-center " role="group" aria-label="Basic radio toggle button group flex-0">
+                            <CRow className="mb-4">
+                                <CCol>
+                                    <CFormSelect {...register("stepId")} size="sm"
+                                        id="validationServer06" label="Faze">
+                                        <option value={1}>
+                                            Pendente
+                                        </option>
+                                        <option value={2}>
+                                            Legalização
+                                        </option>
+                                        <option value={3}>
+                                            MIREX
+                                        </option>
+                                        <option value={4}>
+                                            SME
+                                        </option>
+                                        <option value={5}>
+                                            MIREMPET
+                                        </option>
+                                        <option value={6}>
+                                            Finalizado
+                                        </option>
+                                    </CFormSelect>
+                                </CCol>
+                                <CCol>
+                                    <CFormSelect {...register("statusId")} size="sm"
+                                        id="validationServer06" label="Status">
+                                        <option value={1}>
+                                            Pendente
+                                        </option>
+                                        <option value={2}>
+                                            Em Andamento
+                                        </option>
+                                        <option value={3}>
+                                            Aprovado
+                                        </option>
+                                        <option value={4}>
+                                            Recusado
+                                        </option>
+                                        <option value={5}>
+                                            Cancelado
+                                        </option>
+                                        <option value={6}>
+                                            Finalizado
+                                        </option>
+                                    </CFormSelect>
+                                </CCol>
+                            </CRow>
+                            <CRow>
+                                <CCol>
+                                    <CFormTextarea {...register("descricao")} placeholder="descreva uma nota">
 
-                                <CFormSelect size="sm"
-                                    id="validationServer06" label="Faze">
-                                    <option>
-                                        Tradução
-                                    </option>
-                                    <option>
-                                        Transição
-                                    </option>
-                                    <option>
-                                        MIREMPET
-                                    </option>
-                                    <option>
-                                        SME
-                                    </option>
-                                </CFormSelect>
-                                <CFormSelect size="sm"
-                                    id="validationServer06" label="Status">
-                                    <option>
-                                        Em andamento
-                                    </option>
-                                    <option>
-                                        Aprovado
-                                    </option>
-                                    <option>
-                                        Recusado
-                                    </option>
-                                    <option>
-                                        Cancelado
-                                    </option>
-                                    <option>
-                                        Finalizado
-                                    </option>
-                                </CFormSelect>
-                            </div>
-                            <CFormTextarea placeholder="descreva uma nota">
-
-                            </CFormTextarea>
-
+                                    </CFormTextarea>
+                                </CCol>
+                            </CRow>
 
 
                         </CModalBody>
@@ -126,61 +166,21 @@ export default function Detalhar() {
             </>
             <CCard >
                 <CCardBody className=" d-flex align-items-start justify-content-between">
-                    <SimpleCard className=" d-flex w-40 align-items-start justify-content-start" title={"Informações do Beneficiário "}>
-                        <Box pt={8} ></Box>
-                        <CRow className=" d-flex  align-items-center justify-content-center" >
-                            <CCol  >
-                                <CAvatar src="https://cdn.pixabay.com/photo/2020/07/01/12/58/icon-5359553_960_720.png" style={{ maxWidth: 300, minWidth: 200 }}>
-
-                                </CAvatar>
-                            </CCol>
-
-                        </CRow>
-                        <Box pt={8} ></Box>
-                        <CRow className="mt-4">
-                            <CCol>
-                                <div className="d-flex row">
-                                    <span>
-                                        Nome:
-                                        <strong>
-                                            Antonio Machado
-                                        </strong>
-                                    </span>
-
-
-                                    <span>
-                                        Email:
-                                        <strong>
-                                            antonio@gmail.om
-                                        </strong>
-                                    </span>
-
-                                    <span>
-                                        Faze Actual:
-                                        <strong>
-                                            Legalização
-                                        </strong>
-                                    </span>
-
-                                </div>
-                            </CCol>
-                        </CRow>
-
-                    </SimpleCard>
-
 
                     <div className="p-4 w-100">
                         <div className="w-100 d-flex align-items-start justify-content-between">
                             <H1>
-                                Processo Nº
+
                             </H1>
                             <div>
                                 <Link>
                                     <Button>   <Edit></Edit></Button>
                                 </Link>
-                                <Link>
-                                    <Button>   <Print></Print></Button>
-                                </Link>
+                                {
+                                    loadingMap === true ? <CSpinner></CSpinner> : <Link onClick={async () => { gerarFicha() }}>
+                                        <Button>   <Print>Ficha</Print></Button>
+                                    </Link>
+                                }
                                 <>
                                     {/* {['Faze',].map((color, index) => (
                                         <CDropdown variant="btn-group" key={index}>
@@ -219,98 +219,7 @@ export default function Detalhar() {
                                 </>
                             </div>
                         </div>
-                        <CNav variant="tabs">
-
-                            <CNavItem>
-                                <CNavLink
-                                    style={{
-                                        backgroundColor: render === 0 ? "rgb(22, 125, 227)" : "#eee",
-                                        color: render === 0 ? "#fff " : "#1f1f1f",
-                                        cursor: "pointer"
-                                    }}
-                                    data="trabalho"
-                                    href="#"
-                                    onClick={() => setRender((prev) => 0)}
-                                    active={render === 0 ? true : false}
-                                >
-                                    Resumo
-                                </CNavLink>
-                            </CNavItem>
-                            <CNavItem>
-
-                                <CNavLink
-                                    style={{
-                                        backgroundColor: render === 1 ? "rgb(22, 125, 227)" : "#eee",
-                                        color: render === 1 ? "#fff " : "#1f1f1f",
-                                        cursor: "pointer"
-                                    }}
-                                    data="trabalho"
-                                    href="#"
-                                    onClick={() => setRender((prev) => 1)}
-                                    active={render === 1 ? true : false}
-                                >
-                                    Identificacao
-                                </CNavLink>
-                            </CNavItem>
-
-
-                            <CNavItem>
-                                <CNavLink
-                                    style={{
-                                        backgroundColor: render === 5 ? "rgb(22, 125, 227)" : "#eee",
-                                        color: render === 5 ? "#fff " : "#1f1f1f",
-                                        cursor: "pointer"
-                                    }}
-                                    data="turismo"
-                                    onClick={() => setRender((prev) => 5)}
-                                    active={render === 5 ? true : false}
-                                >
-                                    Documentos
-                                </CNavLink>
-                            </CNavItem>
-                        </CNav>
-
-                        <CCol className="d-flex align-items-center" style={{ background: "#eee", height: 50 }}>
-
-
-                        </CCol>
-                        <CTabContent className="rounded-bottom">
-                            <CTabPane data="trabalho" className="preview" visible={render === 0 ? true : false}>
-                                <Resumo></Resumo>
-                            </CTabPane>
-                            <CTabPane data="turismo" className="preview" visible={render === 1 ? true : false}>
-                                <Box pt={4}></Box>
-                                <FormularioVisualizarDadosPessoais cliente={{
-                                    nomeCompleto: "KIVEMBA SOFT",
-                                    passaporte: {
-                                        numeroPassaporte: "34443434343434",
-                                        entidade: "perak",
-                                        dataEmissao: new Date(),
-                                        dataValidade: new Date(),
-                                    },
-                                    genero: "Masculino",
-                                    estadoCivil: "Solteiro",
-                                    nacionalidade: "Angola",
-                                    paisNascimento: "Gana",
-                                    municipio: "estalagem",
-                                    municipioNascimento: "Catepa",
-                                    nomePai: "Paulino",
-                                    nomeMae: "Paulina"
-
-                                }}></FormularioVisualizarDadosPessoais>
-
-                            </CTabPane>
-
-                            <CTabPane className="preview" visible={render === 2 ? true : false}>
-                                <Box pt={3}></Box>
-                                <FormularioVisualizarDadosProFissionais cliente={{ profissao: "Engenheiro", passaporte: "AB555", funcao: "Inspector" }}></FormularioVisualizarDadosProFissionais>
-                            </CTabPane>
-
-                            <CTabPane className="preview border-1" visible={render === 4 ? true : false}>
-                                <Box pt={2}></Box>
-                                <ListarDocumentos></ListarDocumentos>
-                            </CTabPane>
-                        </CTabContent>
+                        <FormularioVisualizarDadosPessoais processo={processos}></FormularioVisualizarDadosPessoais>
                     </div>
                 </CCardBody>
             </CCard>

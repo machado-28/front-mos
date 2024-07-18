@@ -11,12 +11,14 @@ const Detalhar = Loadable(lazy(() => import("./Detalhar")));
 const List = Loadable(lazy(() => import("./Listar")));
 const ListPersonalizado = Loadable(lazy(() => import("./ListarPersonalizado")));
 const Detail = Loadable(lazy(() => import("./Detalhar")));
+const Relatorio = Loadable(lazy(() => import("./Relatorio")));
 
 
 const projectoRoutes = [
     { path: "/clientes/:clienteId/projectos/add", element: <Add /> },
     { path: "/clientes/:clienteId/projectos/:projectoId/detalhar", element: <Detail /> },
     { path: "/projectos/add", element: <AddParaCliente /> },
+    { path: "/projectos/relatorio", element: <Relatorio /> },
 
     {
         path: "/projectos/list", element: <PrivateRoutes auth={authRoles.gestorCliente}>

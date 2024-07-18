@@ -33,7 +33,7 @@ class Usuario {
 
     }
 
-    async buscarTodos({ id, tipoId, orderBy, order, date, clienteId, painelId }) {
+    async buscarTodos({ id, tipoId, orderBy, order, date, clienteId, painelId }={}) {
         const api = useApi()
         const usuarios = await api.listQuery(`usuarios?id=${id}&orderBy=${orderBy}&order=${order}&date=${date}&clienteId=${clienteId}&painelId=${painelId}`).then((resp) => {
             console.table("%cUsuarios", "font-size:xx-large; color: blue", resp?.data?.usuarios);
@@ -74,17 +74,17 @@ class Usuario {
         })
         return painels
     }
-    async contar({ id, date, clienteId, painelId }) {
+    async contar({ id, date, clienteId, painelId }={}) {
         const api = useApi()
-        const usuarios = await api.listQuery(`usuarios/count?id=${id}&clienteId=${clienteId}&painelId=${painelId}`).then((resp) => {
-            console.table("%cUsuarios", "font-size:xx-large; color: blue", resp?.data?.usuarios);
+        const total = await api.listQuery(`usuarios/count?id=${id}&clienteId=${clienteId}&painelId=${painelId}`).then((resp) => {
+            console.table("%cUsuarios total", "font-size:xx-large; color: blue", resp?.data?.total);
 
             return resp?.data?.total
         }).catch((error) => {
             console.log(error);
             NotifyError("Erro ao Emitir PDF");
         })
-        return usuarios
+        return total
     }
 }
 export { Usuario }

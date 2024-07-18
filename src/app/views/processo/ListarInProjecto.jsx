@@ -17,6 +17,7 @@ import {
     CModalFooter,
     CModalHeader,
     CModalTitle,
+    CRow,
     CSpinner
 } from "@coreui/react";
 import {
@@ -28,6 +29,7 @@ import {
     Image,
     Person,
     PlusOne,
+    Print,
     PunchClock,
     ReceiptLongSharp,
     Search,
@@ -35,6 +37,7 @@ import {
     TroubleshootOutlined
 } from "@mui/icons-material";
 import {
+    Avatar,
     Box,
     Button,
     Card,
@@ -58,12 +61,13 @@ import { NotifyError } from "app/utils/toastyNotification";
 import { formatDateDifference } from "app/utils/validate";
 
 import { Projecto } from "./../projecto/util";
-import { StatusBadge, VistoBadge } from "./function";
+import { CustomBadge, StatusBadge, VistoBadge } from "./function";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Add from "@mui/icons-material/Add";
 import { LoadingButton } from "@mui/lab";
+import Processo from "./util";
 
 // STYLED COMPONENTS
 const CardHeader = styled(Box)(() => ({
@@ -114,7 +118,30 @@ const AppButtonRoot = styled("div")(({ theme }) => ({
     "& .button": { margin: theme.spacing(1) },
     "& .input": { display: "none" }
 }));
+const loadMapashema = z.object({
+    tipoVistoId: z
+        .string()
+        .min(1, { message: "Este campo é obrigatorio" }),
+
+    month: z.coerce
+        .string({ message: "Telefone Incorrecto" })
+        .min(1, { message: "Este campo é obrigatorio" }),
+    year: z.string().default(new Date().getFullYear().toString())
+
+
+});
 export default function Listar() {
+    const {
+        register,
+        reset,
+        watch,
+        handleSubmit,
+        formState: { errors }
+    } = useForm({
+        resolver: zodResolver(loadMapashema),
+        shouldFocusError: true,
+        progressive: true
+    });
     const { palette } = useTheme();
     const bgError = palette.error.main;
     const bgPrimary = palette.primary.main;
@@ -126,16 +153,13 @@ export default function Listar() {
     const [orderBy, setOrderBy] = useState("nome");
     const [date, setDate] = useState();
     const goto = useNavigate();
-
+    const [visibleMapa, setVisibleMapa] = useState(false);
     const handleChangePage = (_, newPage) => {
         setPage(newPage);
     };
     const api = useApi();
 
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(+event.target.value);
-        setPage(0);
-    };
+
 
     const [filtroStatus, setFiltroStatus] = useState(0);
 
@@ -152,9 +176,6 @@ export default function Listar() {
         margin: theme.spacing(1)
     }));
 
-    const addAprovarShema = z.object({
-        descricao: z.string()
-    });
 
     const { clienteId, projectoId } = useParams()
     const [projectoData, setProjectoData] = useState({})
@@ -168,37 +189,58 @@ export default function Listar() {
         setProjectoData(prev => res[0])
 
     }
-
-    useEffect(() => {
-        buscarProjecto()
-    }, [])
-    const {
-        register,
-        reset,
-        watch,
-        handleSubmit,
-        formState: { errors }
-    } = useForm({
-        resolver: zodResolver(addAprovarShema),
-        shouldFocusError: true,
-        progressive: true
-    });
-
     const { passaporte: clientId = 1 } = useParams()
     // let clientId=1
     const [loading, setLoading] = useState(false);
     const [processos, setProcessos] = useState([]);
     const [totalProcessos, setTotalProcessos] = useState(0);
-    const [visibleMapa, setVisibleMapa] = useState(false);
+
 
     const [visibleAprovar, setVisibleAprovar] = useState(false);
+    const gerarMapa = async (data) => {
+        setLoading(prev => true)
+        const processo = new Processo();
+        await processo.gerarMapa({ data, projectoId })
+        setLoading(prev => false)
+    }
+
+    const buscarProcesso = async (data) => {
+        setLoading(prev => true)
+        const processo = new Processo();
+        const res = await processo.progresso({ projectoId })
+        setProcessos(prev => res.progresso)
+        setLoading(prev => false)
+        console.log("PROGRESSO", res.progresso);
+
+    }
+
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(+event.target.value);
+        setPage(0);
+    };
+    useEffect(() => {
+        buscarProjecto();
+        buscarProcesso()
+    }, [])
+
+    console.log("PROGRESSO 2", processos);
+
 
     console.log("ERRO FORM", errors);
 
 
     const filteredProcessos = processos?.filter((process) =>
-        process?.beneficiario?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
-    );
+        process?.processo?.beneficiario?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
+        || process?.processo?.passaporteNumero?.toLowerCase().includes(searchTerm?.toLowerCase())
+        || new Date(process?.processo?.createdAt)?.toLocaleDateString()?.includes(searchTerm?.toLowerCase())
+        || new Date(process?.processo?.createdAt).toLocaleDateString("default", { month: "long" })?.includes(searchTerm?.toLowerCase())
+        || ("Dia " + new Date(process?.processo?.createdAt).getDay()).toLowerCase().includes(searchTerm?.toLowerCase())
+        || process?.processo?.tipoVisto?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
+        || process?.step?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
+
+    )
+        ;
 
     const styleDropdown = {};
     return (
@@ -211,59 +253,61 @@ export default function Listar() {
                     aria-labelledby="VerticallyCenteredExample"
                 >
                     <CModalHeader>
-                        <CModalTitle id="VerticallyCenteredExample">Emissão de Mapa de Solicitações</CModalTitle>
+                        <CModalTitle id="VerticallyCenteredExample">Emissão de Mapa</CModalTitle>
                     </CModalHeader>
-                    <CForm  >
+                    <CForm onSubmit={handleSubmit(gerarMapa)} >
                         <CModalBody>
-                            <div className="d-flex justify-content-center align-items-center " role="group" aria-label="Basic radio toggle button group flex-0">
-                                <CFormSelect   style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }}
-                                    id="validationServer05" label="Tipo: ">
 
-                                    <option value={1}>
-                                        Turismo
-                                    </option>
-                                    <option value={2}>
-                                        Trabalho
-                                    </option>
-                                    <option value={3}>
-                                        Curta Duração
-                                    </option>
-                                    <option value={4}>
-                                        Fronteira
-                                    </option>
-                                </CFormSelect>
-                                <CFormSelect style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }}
-                                    id="validationServer06" label="Projecto:">
-                                    <option>
-                                        CLOV3
-                                    </option>
-                                    <option>
-                                        SLGC
-                                    </option>
-                                    <option>
-                                        AGOGO
-                                    </option>
-                                </CFormSelect>
-                                <CFormSelect style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }}
-                                    id="validationServer06" label="Status:">
-                                    <option>
-                                        Aprovados
-                                    </option>
-                                    <option>
-                                        Cancelados
-                                    </option>
-                                    <option>
-                                        Recusados
-                                    </option>
-                                    <option>
-                                        Finalizado
-                                    </option>
-                                </CFormSelect>
-                            </div>
-                            <div className="d-flex justify-content-center align-items-center " role="group" aria-label="Basic radio toggle button group flex-0">
-                                <CFormInput style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }} label={"Desde"} type="date"></CFormInput>
-                                <CFormInput style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }} label={"Até"} type="date"></CFormInput>
-                            </div>
+                            <CRow className="mb-4">
+
+                                <CCol>
+                                    <CFormSelect {...register("tipoVistoId")} defaultValue={1} size="sm"
+                                        id="validationServer05" label="Tipo: ">
+                                        <option value={1}>
+                                            Turismo
+                                        </option>
+                                        <option value={2}>
+                                            Trabalho
+                                        </option>
+                                        <option value={3}>
+                                            Curta Duração
+                                        </option>
+                                        <option value={4}>
+                                            Fronteira
+                                        </option>
+                                    </CFormSelect>
+                                </CCol>
+                            </CRow>
+
+                            <CRow>
+                                <CCol>
+                                    <CFormSelect defaultValue={new Date().getFullYear().toString()} {...register("year")} size="sm" id="validationServer06" label="Ano">
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2026">2026</option>
+                                        <option value="2027">2027</option>
+                                        <option value="2028">2028</option>
+                                    </CFormSelect>
+                                </CCol>
+                                <CCol>
+                                    <CFormSelect {...register("month")} size="sm" defaultValue={new Date().getMonth() + 1} id="validationServer07" label="Mês">
+                                        <option value="1">Janeiro</option>
+                                        <option value="2">Fevereiro</option>
+                                        <option value="3">Março</option>
+                                        <option value="4">Abril</option>
+                                        <option value="5">Maio</option>
+                                        <option value="6">Junho</option>
+                                        <option value="7">Julho</option>
+                                        <option value="8">Agosto</option>
+                                        <option value="9">Setembro</option>
+                                        <option value="10">Outubro</option>
+                                        <option value="11">Novembro</option>
+                                        <option value="12">Dezembro</option>
+                                    </CFormSelect>
+                                </CCol>
+                            </CRow>
+
+
 
 
                         </CModalBody>
@@ -324,17 +368,20 @@ export default function Listar() {
 
             <div className="w-100 d-flex  justify-content-between">
                 <strong>Processos ({totalProcessos})   <Person></Person> </strong>
-                <div>
+                <div className="d-flex">
                     <Link
                         onClick={() => {
                             setVisibleMapa(prev => true)
                         }}
                     >
+                        <StyledButton className="d-flex align-content-center" size="sm" variant="contained" color="success">
+                            Mapa <Print></Print>
+                        </StyledButton>
 
                     </Link>
 
                     <Link to={`/clientes/${clientId}/processos/add`}>
-                        <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
+                        <StyledButton className="d-flex align-content-center" size="sm" variant="outlined" color="success">
                             Criar Novo <Add></Add>
                         </StyledButton>
                     </Link>
@@ -396,7 +443,7 @@ export default function Listar() {
                             size="sm"
                             value={searchTerm}
                             onChange={handleSearchChange}
-                            placeholder="Buscar..."
+                            placeholder="beneficiario, passaporte, codigo, visto, data, faze, status"
                         />
                     </CInputGroup>
 
@@ -447,44 +494,36 @@ export default function Listar() {
                     <ProductTable>
                         <TableHead>
                             <TableRow>
-
-                                <TableCell colSpan={2} sx={{ px: 3 }}>
-                                    Id.
-                                </TableCell>
-                                <TableCell colSpan={3} sx={{ px: 2 }}>
-                                    Requerente
-                                </TableCell>
-                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                <TableCell colSpan={5} sx={{ px: 2 }}>
                                     Beneficiario
                                 </TableCell>
-                                <TableCell colSpan={3} sx={{ px: 2 }}>
-                                    Nacion
-
+                                <TableCell colSpan={3} sx={{ px: 3 }}>
+                                    Visto
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
                                     Passaporte
                                 </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    MOB
-                                    <DownloadOutlined></DownloadOutlined>
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    dat.prev
                                 </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
+                                {/* <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Atraso
+                                </TableCell> */}
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Status
+                                </TableCell>
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Data
+                                </TableCell>
 
-                                    Dat. recep
-                                    <DownloadOutlined></DownloadOutlined>
-                                </TableCell>
-                                <  TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Dat. envio
-
-                                </TableCell>
-                                <TableCell colSpan={1} sx={{ px: 0 }}>
-                                    Acções
+                                <TableCell colSpan={2} sx={{ px: 2 }}>
+                                    Acção
 
                                 </TableCell>
                             </TableRow>
                         </TableHead>
 
-                        <TableBody>
+                        <TableBody style={{ overflow: "scroll" }}>
                             {loading ? (
                                 <CSpinner></CSpinner>
                             ) : (
@@ -494,77 +533,50 @@ export default function Listar() {
                                         ?.map((projecto, index) => (
                                             <TableRow key={index} hover>
 
-                                                <TableCell sx={{ px: 3 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{projecto?.numero}</Paragraph>
-                                                </TableCell>
-
-                                                <TableCell
-                                                    colSpan={3}
-                                                    align="left"
-                                                    sx={{ px: 2, textTransform: "capitalize" }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            {projecto?.requerente?.nome}
-                                                        </Paragraph>
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={5}>
+                                                    {/* <StyledAvatar src={tecn?.avatar?.url} /> */}
+                                                    <Box display="flex" alignItems="center" gap={3}>
+                                                        <Avatar src={projecto?.processo?.beneficiario?.avatar?.url} />
+                                                        <Paragraph style={{ textAlign: "center", fontSize: "0.74rem" }}>   {projecto?.processo?.beneficiario?.nome}</Paragraph>
                                                     </Box>
                                                 </TableCell>
-                                                <TableCell
-                                                    colSpan={3}
-                                                    align="left"
-                                                    sx={{ px: 2, textTransform: "capitalize" }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            Sampaio Alberto
-                                                        </Paragraph>
-                                                    </Box>
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={3}>
+                                                    <Paragraph >{VistoBadge({ status: projecto?.processo?.tipoVistoId })}</Paragraph>
                                                 </TableCell>
-                                                <TableCell
-                                                    colSpan={3}
-                                                    align="left"
-                                                    sx={{ px: 2, textTransform: "capitalize" }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>24/04/2024</CBadge>
-                                                        </Paragraph>
-
-                                                    </Box>
+                                                <TableCell sx={{ px: 2 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{projecto?.processo?.passaporteNumero}</Paragraph>
                                                 </TableCell>
-
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={3}  >
                                                     <Paragraph style={{ fontSize: fSize }}>
-                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>P4656</CBadge>
+                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>{new Date(projecto?.updatedAt).toLocaleDateString()}</CBadge>
+                                                    </Paragraph>
+                                                </TableCell>
 
-                                                        <AirplaneTicket></AirplaneTicket>
+
+                                                {/* <TableCell
+                                                    sx={{ px: 3 }} align="left" colSpan={3}
+                                                >
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>24/04/2024</CBadge>
                                                     </Paragraph>
 
-
-                                                </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                                                </TableCell> */}
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={3}>
                                                     <Paragraph style={{ fontSize: fSize }}>
-                                                        <CBadge className="bg-success text-black">24/04/2024</CBadge>
-                                                        <DownloadOutlined></DownloadOutlined>
+                                                        {StatusBadge({ status: projecto?.step?.id })}
+
                                                     </Paragraph>
-
                                                 </TableCell>
-
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <Paragraph style={{ fontSize: fSize }}>
                                                         {formatDateDifference(new Date(projecto?.createdAt))}
                                                     </Paragraph>
                                                 </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {formatDateDifference(new Date(projecto?.createdAt))}
-                                                        <Send></Send>
-                                                    </Paragraph>
-                                                </TableCell>
+
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <CFormSelect
-                                                        style={{ fontSize: "12px", minWidth: "6.45rem" }}
+                                                        style={{ fontSize: "12px", minWidth: "5.45rem" }}
+                                                        size="sm"
                                                         id="validationServer04"
                                                         onChange={async (e) => {
                                                             if (e.target.value == 1) {

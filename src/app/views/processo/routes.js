@@ -8,6 +8,7 @@ const Add = Loadable(lazy(() => import("./Add")));
 // const Edit = Loadable(lazy(() => import("./Editar")));
 const Detalhar = Loadable(lazy(() => import("./Detalhar")));
 const List = Loadable(lazy(() => import("./Listar")));
+const Pendentes = Loadable(lazy(() => import("./Pendentes")));
 
 const processoRoutes = [
     { path: "/processos/add", element: <Add /> },
@@ -22,22 +23,22 @@ const processoRoutes = [
     //         <Edit />
     //     </PrivateRoutes>
     // },
-    
+
     {
         path: "/processos/list", element: <PrivateRoutes auth={authRoles.gestorVistoSecretaria}>
             <List />
         </PrivateRoutes>
 
     },
-     
+
     {
-        path: "/processos/:id/detail", element: <PrivateRoutes auth={authRoles.gestorVistoSecretaria}>
+        path: "/processos/:processoId/detail", element: <PrivateRoutes auth={authRoles.gestorVistoSecretaria}>
             <Detalhar />
         </PrivateRoutes>
     },
     {
         path: "/processos/pendentes", element: <PrivateRoutes auth={authRoles.gestorVistoSecretaria}>
-            <List />
+            <Pendentes />
         </PrivateRoutes>
     },
 

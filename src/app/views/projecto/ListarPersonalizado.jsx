@@ -309,8 +309,14 @@ export default function ListarPersonalizado() {
         setLoading(prev => !prev)
     }
 
-    const filteredProjectos = projectos?.filter((projecto) =>
-        projecto?.requerente?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
+    const filteredProjectos = projectos?.filter((project) =>
+        project?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
+        || project?.gestorExterno?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
+        || project?.gestorInterno?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
+        || new Date(project?.createdAt)?.toLocaleDateString()?.includes(searchTerm?.toLowerCase())
+        || new Date(project?.createdAt).toLocaleDateString("default", { month: "long" })?.includes(searchTerm?.toLowerCase())
+        || ("Dia " + new Date(project?.createdAt).getDay()).toLowerCase().includes(searchTerm?.toLowerCase())
+
     );
 
     console.log("PEDISOS", projectos);

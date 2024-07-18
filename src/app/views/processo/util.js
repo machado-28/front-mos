@@ -11,15 +11,70 @@ class Processo {
             NotifyError("Erro ao Emitir PDF")
         })
     }
-    async gerarPDFGeral(solicitacoes) {
+    async gerarMapa({ data={}, projectoId }) {
+        const { year, month, tipoVistoId } = data
         const api = useApi()
-        await api.documento("solicitacoes/pdf/geral", solicitacoes).then((resp) => {
+        await api.documento(`processos/mapa?projectoId=${projectoId}&year=${year}&month=${month}&tipoVistoId=${tipoVistoId}`).then((resp) => {
             console.log("PDF GERADO", resp);
         }).catch((error) => {
             console.log(error);
             NotifyError("Erro ao Emitir PDF")
         })
     }
+    async gerarFicha({ data={}, processoId }) {
+        const { year, month, tipoVistoId } = data
+        const api = useApi()
+        await api.documento(`processos/ficha?processoId=${processoId}&year=${year}&month=${month}&tipoVistoId=${tipoVistoId}`).then((resp) => {
+            console.log("PDF GERADO", resp);
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao Emitir PDF")
+        })
+    }
+    async contar({ tipoVistoId, clienteId, gestorInternoId, gestorExternoId, date, order, orderBy, id } = {}) {
+
+        const api = useApi()
+        const total = await api.listQuery(`processos/count?order=${order}&date=${date}&id=${id}&orderBy=${orderBy}&tipoVistoId=${tipoVistoId}&clienteId=${clienteId}&gestorInternoId=${gestorInternoId}&gestorExternoId=${gestorExternoId}`).then((resp) => {
+            console.log("%cprocessos total", "font-size:xx-large;color:blue", resp.data?.total);
+
+            return resp?.data?.total
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao buscar projectos")
+        })
+        return total
+
+    }
+
+    async progresso({statusId, projectoId, stepId, tipoVistoId, clienteId, gestorInternoId, gestorExternoId, date, order, orderBy, id } = {}) {
+
+        const api = useApi()
+        const total = await api.listQuery(`processos/progresso?statusId=${statusId}&projectoId=${projectoId}&stepId=${stepId}&order=${order}&date=${date}&id=${id}&orderBy=${orderBy}&tipoVistoId=${tipoVistoId}&clienteId=${clienteId}&gestorInternoId=${gestorInternoId}&gestorExternoId=${gestorExternoId}`).then((resp) => {
+            console.log("%cprocessos total", "font-size:xx-large;color:blue", resp.data?.total);
+
+            return resp?.data
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao buscar projectos")
+        })
+        return total
+
+    }
+    async buscar({ processoId, stepId, tipoVistoId, clienteId, gestorInternoId, gestorExternoId, date, order, orderBy, id } = {}) {
+
+        const api = useApi()
+        const data = await api.listQuery(`processos/progresso?processoId=${processoId}stepId=${stepId}&order=${order}&date=${date}&id=${id}&orderBy=${orderBy}&tipoVistoId=${tipoVistoId}&clienteId=${clienteId}&gestorInternoId=${gestorInternoId}&gestorExternoId=${gestorExternoId}`).then((resp) => {
+            console.log("%cprocessos busca", "font-size:xx-large;color:blue", resp.data);
+
+            return resp?.data
+        }).catch((error) => {
+            console.log(error);
+            NotifyError("Erro ao buscar projectos")
+        })
+        return data
+
+    }
+
     async buscarProcessoPorTipo({ tipoId }) {
         const api = useApi()
         await api.listQuery(`solicitacoes/tipoId/${tipoId}`).then((resp) => {
@@ -69,10 +124,10 @@ class Processo {
             NotifyError("Erro ao Emitir PDF")
         })
     }
-    async actualizarStatus({ pedidoId, statusId, descricao, }) {
+    async actualizarStatus({ processoId, stepId, statusId, descricao, }) {
 
         const api = useApi()
-        await api.editOne(`pedidos/${pedidoId}`, { descricao, statusId }).then((resp) => {
+        await api.editOne(`processos/${processoId}`, { stepId, statusId, descricao }).then((resp) => {
             console.log("ACTUALIA", resp);
             Notify(resp?.data?.message)
 

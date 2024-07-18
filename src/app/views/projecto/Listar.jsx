@@ -25,6 +25,7 @@ import {
     FolderCopySharp,
     Person,
     PlusOne,
+    Print,
     Search,
     TroubleshootOutlined
 } from "@mui/icons-material";
@@ -164,6 +165,16 @@ export default function Listar() {
         progressive: true
     });
 
+    const gerarMapa = async () => {
+        setLoading(prev => true)
+        await api.add("pdf").then(res => {
+            setLoading(prev => false);
+            console.log(res);
+        }).catch((err) => {
+            console.log(err);
+            setLoading(prev => false);
+        });
+    }
     let { clienteId } = useParams();
     const { user } = useAuth();
     const { gestorId } = useParams();
@@ -173,49 +184,53 @@ export default function Listar() {
     if (user.clienteId) {
         clienteId = user?.clienteId
         gestorExternoId = gestorId;
-
     }
     else {
         gestorInternoId = gestorId;
         gestorExternoId = gestorId;
     }
 
-
     // let clienteId=1
     const [loading, setLoading] = useState(false);
+    const [visibleMapa, setVisibleMapa] = useState(false);
     const [projectos, setProjectos] = useState([]);
     const [order, setOrder] = useState("DESC");
     const [orderBy, setOrderBy] = useState("nome");
     const [date, setDate] = useState();
-
 
     const projecto = new Projecto();
     async function buscarProjectos() {
         let proj = await projecto.buscar({ clienteId, order, orderBy, date, gestorExternoId, gestorInternoId });
         setProjectos(prev => proj)
     }
-
+    // + (new Date(project?.createdAt).getDay().toString()).includes(searchTerm?.toLowerCase())
     const filteredprojectoes = projectos?.filter((project) =>
         project?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
-    );
-
-
+        || project?.gestorExterno?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
+        || project?.gestorInterno?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
+        || new Date(project?.createdAt)?.toLocaleDateString()?.includes(searchTerm?.toLowerCase())
+        || new Date(project?.createdAt).toLocaleDateString("default", { month: "long" })?.includes(searchTerm?.toLowerCase())
+        || ("Dia " + new Date(project?.createdAt).getDay()).toLowerCase().includes(searchTerm?.toLowerCase())
+    )
 
     useEffect(() => {
         buscarProjectos()
-    }, [order, orderBy, clienteId, date, searchTerm])
+    }, [order, orderBy, clienteId, date])
     const styleDropdown = {};
+
     return (
         <AppButtonRoot>
             <div className="w-100 d-flex  justify-content-between">
-                <strong>Lista de Projectos ({projectos?.length})  <Person></Person></strong>
-                <div>
+                <strong>Lista de Projectos  ({projectos?.length})  <Person></Person></strong>
+                <section className="d-flex">
                     <Link
                         onClick={() => {
                             setVisibleMapa(prev => true)
                         }}
                     >
-
+                        <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="contained" color="success">
+                            Mapa <Print></Print>
+                        </StyledButton>
                     </Link>
 
                     <Link to={`/clientes/${clienteId}/projectos/add`}>
@@ -223,7 +238,9 @@ export default function Listar() {
                             Criar Novo <Add></Add>
                         </StyledButton>
                     </Link>
-                </div>
+
+
+                </section>
 
             </div>
 
@@ -242,7 +259,7 @@ export default function Listar() {
                             size="sm"
                             value={searchTerm}
                             onChange={handleSearchChange}
-                            placeholder="Buscar..."
+                            placeholder="projecto,gestor"
                         />
                     </CInputGroup>
 
@@ -364,7 +381,7 @@ export default function Listar() {
                                                         onChange={async (e) => {
                                                             if (e.target.value == 1) {
                                                                 return goto(
-                                                                    `/clientes/${clienteId}/projectos/${proj?.id}/detalhar`
+                                                                    `/clientes/${proj?.clienteId}/projectos/${proj?.id}/detalhar`
                                                                 );
                                                             }
                                                             if (e.target.value == 2) {

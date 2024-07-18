@@ -1,77 +1,74 @@
 import {
-    AttachMoney,
-    Delete,
-    Download,
-    Edit,
-    FileDownload,
-    Group,
-    Search,
-    Store,
-    Visibility
-} from "@mui/icons-material";
-import {
-    Box,
-    Card,
-    Table,
-    Select,
-    Avatar,
-    styled,
-    TableRow,
-    useTheme,
-    MenuItem,
-    TableBody,
-    TableCell,
-    TableHead,
-    IconButton,
-    Button,
-    TablePagination,
-    Icon,
-    TextField as MuiTextField,
-    Grid,
-    TextField,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    DialogContentText
-} from "@mui/material";
-import { Breadcrumb, SimpleCard } from "app/components";
-import { H3, Paragraph } from "app/components/Typography";
-import "./style.css";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useApi } from "app/hooks/useApi";
-import { useEffect } from "react";
-import {
+    CAlert,
+    CAvatar,
+    CBadge,
     CButton,
+    CCallout,
     CCol,
     CContainer,
-    CDropdown,
-    CDropdownItem,
-    CDropdownMenu,
-    CDropdownToggle,
     CForm,
     CFormInput,
     CFormSelect,
-    CFormText,
+    CFormSwitch,
+    CFormTextarea,
+    CInputGroup,
+    CInputGroupText,
+    CModal,
+    CModalBody,
+    CModalFooter,
+    CModalHeader,
+    CModalTitle,
     CRow,
     CSpinner
 } from "@coreui/react";
-import { StyledButton } from "app/views/material-kit/buttons/AppButton";
-import { ContentBox } from "app/views/dashboard/Analytics";
-import StatCards from "app/views/dashboard/shared/StatCards";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import {
+    AirplaneTicket,
+    CallToAction,
+    Download,
+    DownloadOutlined,
+    FolderCopySharp,
+    Image,
+    Person,
+    PlusOne,
+    Print,
+    PunchClock,
+    ReceiptLongSharp,
+    Search,
+    Send,
+    TroubleshootOutlined
+} from "@mui/icons-material";
+import {
+    Avatar,
+    Box,
+    Button,
+    Card,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TablePagination,
+    TableRow,
+    TextField,
+    styled,
+    useTheme
+} from "@mui/material";
+import { Paragraph } from "app/components/Typography";
+import { useApi } from "app/hooks/useApi";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import "./style.css";
 // import { ChartLine } from "./ChartLine";
-import StatCardsLine from "app/views/dashboard/shared/StatCardsLine";
 import { NotifyError } from "app/utils/toastyNotification";
 import { formatDateDifference } from "app/utils/validate";
-import paletaCor from "app/utils/paletaCor";
 
-import { TextValidator } from "react-material-ui-form-validator";
-import FormAprovar from "../processos/Local/Formularios/FormAprovar";
-import FormRecusar from "../processos/Local/Formularios/FormRecusar";
+import { Projecto } from "./../projecto/util";
+import { CustomBadge, StatusBadge, VistoBadge } from "./function";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import Add from "@mui/icons-material/Add";
+import { LoadingButton } from "@mui/lab";
+import Processo from "./util";
 
 // STYLED COMPONENTS
 const CardHeader = styled(Box)(() => ({
@@ -122,57 +119,58 @@ const AppButtonRoot = styled("div")(({ theme }) => ({
     "& .button": { margin: theme.spacing(1) },
     "& .input": { display: "none" }
 }));
-export default function Pendentes() {
+const loadMapashema = z.object({
+    tipoVistoId: z
+        .string()
+        .min(1, { message: "Este campo é obrigatorio" }),
+    projectoId: z
+        .string()
+        .min(1, { message: "Este campo é obrigatorio" }),
+
+    month: z.coerce
+        .string({ message: "Telefone Incorrecto" })
+        .min(1, { message: "Este campo é obrigatorio" }),
+    year: z.string().default(new Date().getFullYear().toString())
+
+
+});
+export default function Listar() {
+    const {
+        register,
+        reset,
+        watch,
+        handleSubmit,
+        formState: { errors }
+    } = useForm({
+        resolver: zodResolver(loadMapashema),
+        shouldFocusError: true,
+        progressive: true
+    });
     const { palette } = useTheme();
     const bgError = palette.error.main;
     const bgPrimary = palette.primary.main;
     const bgSecondary = palette.secondary.main;
     const [page, setPage] = useState(0);
+    const [OrigemId, setOrigemId] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [order, setOrder] = useState("DESC");
+    const [orderBy, setOrderBy] = useState("nome");
+    const [date, setDate] = useState();
     const goto = useNavigate();
-
+    const [visibleMapa, setVisibleMapa] = useState(false);
     const handleChangePage = (_, newPage) => {
         setPage(newPage);
     };
     const api = useApi();
 
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(+event.target.value);
-        setPage(0);
-    };
+
 
     const [filtroStatus, setFiltroStatus] = useState(0);
 
     function handleFiltroStatus(e) {
         setFiltroStatus((prev) => e);
     }
-
-    const [pedidos, setPedidos] = useState([]);
-    const [tipoDeVistos, setTipoDeVisto] = useState([]);
-    const [entidades, setEntidade] = useState([]);
-    const [statusPedidos, setStatusDePedidos] = useState([]);
     const fSize = "0.775rem";
-    const [totalPedidoSubmetido, setTotalPedidoSubmetido] = useState(0);
-    const [totalPedidoCancelados, setTotalPedidoCancelados] = useState(0);
-    const [totalPedidoMIREMPET, setTotalMIREMPET] = useState(0);
-    const [totalPedidoSME, setTotalStotalPedidoSME] = useState(0);
-    const [tipoId, setTipoId] = useState(null);
-    const [tipoVistoId, setTipoVistoId] = useState(null);
-    const [statusId, setStatusId] = useState(null);
-    const [fazeId, setFazeId] = useState(null);
-    const [pedidoId, setPedidoId] = useState(1);
-    const [fazes, setFazes] = useState([]);
-    const [tituloEntidade, setTituloEntidade] = useState("Faze/Entidade");
-    const [tituloStatus, setTituloStatus] = useState("Status");
-    const [activeStep, setActiveStep] = useState(0);
-    const [open, setOpen] = useState(false);
-    const handleClose = () => setOpen(false);
-
-    const [openRecusar, setOpenRecusar] = useState(false);
-    const handleCloseRecusar = () => setOpenRecusar(false);
-
-    const [openAprovar, setOpenAprovar] = useState(false);
-    const handleCloseAprovar = () => setOpenAprovar(false);
     const [searchTerm, setSearchTerm] = useState("");
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
@@ -182,622 +180,480 @@ export default function Pendentes() {
         margin: theme.spacing(1)
     }));
 
-    const buscarRelario = async () => {
-        try {
-            await api.list("pedido-emissao/count").then((resp) => {
-                setTotalPedidoSubmetido(resp?.data?.total);
-            });
 
-            await api.listQuery(`pedido-emissao/count?statusId=7`).then((resp) => {
-                setTotalPedidoCancelados(resp?.data?.total);
-            });
+    const { clienteId, projectoId } = useParams()
+    const [projectoData, setProjectoData] = useState({})
 
-            await api.listQuery(`pedido-emissao/count?fazeId=2`).then((resp) => {
-                setTotalMIREMPET(resp?.data?.total);
-            });
+    console.log("PARAMS NEW", useParams());
 
-            await api.listQuery(`pedido-emissao/count?fazeId=4`).then((resp) => {
-                setTotalStotalPedidoSME(resp?.data?.total);
-            });
-        } catch (error) {
-            NotifyError(error);
-        }
+    const projecto = new Projecto();
+    async function buscarProjectos() {
+        const res = await projecto.buscar({});
+
+        setProjectos(prev => res)
+
+    }
+
+    const { passaporte: clientId = 1 } = useParams()
+    // let clientId=1
+    const [loading, setLoading] = useState(false);
+    const [processos, setProcessos] = useState([]);
+    const [projectos, setProjectos] = useState([]);
+    const [totalProcessos, setTotalProcessos] = useState(0);
+
+
+    const [visibleAprovar, setVisibleAprovar] = useState(false);
+    const gerarMapa = async (data) => {
+        setLoading(prev => true)
+        const processo = new Processo();
+        await processo.gerarMapa({ data, projectoId: data.projectoId })
+        setLoading(prev => false)
+    }
+
+
+    const buscarProcesso = async (data) => {
+        setLoading(prev => true)
+        const processo = new Processo();
+        const res = await processo.progresso({ statusId: 1 })
+        setProcessos(prev => res.progresso)
+        setLoading(prev => false)
+        console.log("PROGRESSO", res.progresso);
+
+    }
+
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(+event.target.value);
+        setPage(0);
     };
-
-    async function buscarStatus() {
-        try {
-            if (fazeId !== null) {
-                await api.listQuery(`status-de-pedido/${fazeId}`).then((resp) => {
-                    console.log("STATUS DE DAS FAZES", resp);
-                    const status = resp?.data?.[0]?.status || [];
-                    setStatusDePedidos(status);
-                });
-            }
-            await api.listQuery(`status-de-pedido/1`).then((resp) => {
-                console.log(resp);
-                const status = resp?.data?.[0]?.status || [];
-                setStatusDePedidos(status);
-            });
-        } catch (error) {
-            NotifyError("algo deu errado:" + error);
-        }
-    }
-
     useEffect(() => {
-        buscarStatus();
-    }, [statusId, fazeId, tipoVistoId, tipoId]);
-    const [loadPedido, setLoadingPedido] = useState(false);
-    async function ListarPedidos() {
-        try {
-            if (fazeId !== null && statusId === null && tipoVistoId === null) {
-                setLoadingPedido((prev) => !prev);
-                await api
-                    .listQuery(`pedido-emissao/list?fazeId=${fazeId}`)
-                    .then((resp) => {
-                        console.log("Pedido Recebidos", resp);
-                        const pedidos = resp?.data?.pedidos || [];
-                        console.log(pedidos);
-                        setPedidos(pedidos);
-                    })
-                    .finally(() => {
-                        setLoadingPedido((prev) => !prev);
-                    });
-                return;
-            }
-            if (fazeId !== null && statusId !== null && tipoVistoId === null) {
-                setLoadingPedido((prev) => !prev);
-                await api
-                    .listQuery(`pedido-emissao/list?fazeId=${fazeId}&statusId=${statusId}`)
-                    .then((resp) => {
-                        console.log("Pedido Recebidos", resp);
-                        const pedidos = resp?.data?.pedidos || [];
-                        console.log(pedidos);
-                        setPedidos(pedidos);
-                    })
-                    .finally(() => {
-                        setLoadingPedido((prev) => !prev);
-                    });
-                return;
-            }
-            if (fazeId !== null && statusId === null && tipoVistoId !== null) {
-                console.log("VEIO");
-                setLoadingPedido((prev) => !prev);
-                await api
-                    .listQuery(`pedido-emissao/list?fazeId=${fazeId}&tipoVistoId=${tipoVistoId}`)
-                    .then((resp) => {
-                        console.log("Pedido Recebidos", resp);
-                        const pedidos = resp?.data?.pedidos || [];
-                        console.log(pedidos);
-                        setPedidos(pedidos);
-                    })
-                    .finally(() => {
-                        setLoadingPedido((prev) => !prev);
-                    });
-                return;
-            }
+        buscarProjectos();
+        buscarProcesso()
+    }, [])
 
-            if (fazeId === null && statusId === null && tipoVistoId !== null) {
-                console.log("tipo de visto", tipoVistoId);
-                setLoadingPedido((prev) => !prev);
-                await api
-                    .listQuery(`pedido-emissao/list?tipoVistoId=${tipoVistoId}`)
-                    .then((resp) => {
-                        console.log("Pedido Recebidos", resp);
-                        const pedidos = resp?.data?.pedidos || [];
-                        console.log(pedidos);
-                        setPedidos(pedidos);
-                    })
-                    .finally(() => {
-                        setLoadingPedido((prev) => !prev);
-                    });
-                return;
-            }
+    console.log("PROGRESSO 2", processos);
 
-            if (fazeId === null && statusId !== null && tipoVistoId === null) {
-                setLoadingPedido((prev) => !prev);
-                await api
-                    .listQuery(`pedido-emissao/list?statusId=${statusId}`)
-                    .then((resp) => {
-                        console.log("Pedido Recebidos", resp);
-                        const pedidos = resp?.data?.pedidos || [];
-                        console.log(pedidos);
-                        setPedidos(pedidos);
-                    })
-                    .finally(() => {
-                        setLoadingPedido((prev) => !prev);
-                    });
-                return;
-            }
-            if (fazeId === null && statusId !== null && tipoVistoId !== null) {
-                setLoadingPedido((prev) => !prev);
-                await api
-                    .listQuery(`pedido-emissao/list?tipoVistoId=${tipoVistoId}&statusId=${statusId}`)
-                    .then((resp) => {
-                        console.log("Pedido Recebidos", resp);
-                        const pedidos = resp?.data?.pedidos || [];
-                        console.log(pedidos);
-                        setPedidos(pedidos);
-                    })
-                    .finally(() => {
-                        setLoadingPedido((prev) => !prev);
-                    });
-                return;
-            }
 
-            if (fazeId === null && statusId === null && tipoVistoId === null) {
-                setLoadingPedido((prev) => !prev);
-                await api
-                    .listQuery(`pedido-emissao/list`)
-                    .then((resp) => {
-                        console.log("Pedido Recebidos", resp);
-                        const pedidos = resp?.data?.pedidos || [];
-                        console.log(pedidos);
-                        setPedidos(pedidos);
-                    })
-                    .finally(() => {
-                        setLoadingPedido((prev) => !prev);
-                    });
-                return;
-            }
-        } catch (error) {
-            NotifyError("algo deu errado:" + error);
-        }
-    }
+    console.log("ERRO FORM", errors);
 
-    useEffect(() => {
-        ListarPedidos();
-    }, [statusId, fazeId, tipoVistoId, tipoId]);
 
-    async function gerarPDF() {
-        setLoadingDocumento((prev) => !prev);
-        await api.documento("gerarPDF/pedidos/list", pedidos).finally(() => {
-            setLoadingDocumento((prev) => !prev);
-        });
-    }
-    async function buscarEntidade() {
-        try {
-            await api
-                .listQuery(`fazes`)
-                .then((resp) => {
-                    if (resp.status !== 200) {
-                        return NotifyError("algo deu errado:" + resp.status);
-                    }
-                    const entidades = resp?.data?.fazes || [];
-                    console.log("Entidades", resp);
-                    setEntidade(entidades);
-                })
-                .catch((err) => {
-                    return NotifyError("algo deu errado:" + err);
-                });
-        } catch (error) {
-            return NotifyError("algo deu errado:" + error);
-        }
-    }
+    const filteredProcessos = processos?.filter((process) =>
+        process?.processo?.beneficiario?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
+        || process?.processo?.passaporteNumero?.toLowerCase().includes(searchTerm?.toLowerCase())
+        || new Date(process?.processo?.createdAt)?.toLocaleDateString()?.includes(searchTerm?.toLowerCase())
+        || new Date(process?.processo?.createdAt).toLocaleDateString("default", { month: "long" })?.includes(searchTerm?.toLowerCase())
+        || ("Dia " + new Date(process?.processo?.createdAt).getDay()).toLowerCase().includes(searchTerm?.toLowerCase())
 
-    useEffect(() => {
-        buscarEntidade();
-    }, [statusId, fazeId, tipoVistoId, tipoId]);
 
-    useEffect(() => {
-        buscarRelario({});
-    }, []);
-
-    async function actualizarFaze() {
-        await api.edit(`processo/?fazeId=${fazeId}`);
-    }
-
-    const cardList = [
-        {
-            name: "Submetidos",
-            amount: totalPedidoSubmetido,
-            Icon: Group,
-            color: "info"
-        },
-        {
-            name: "SME",
-            amount: totalPedidoSME,
-            Icon: AttachMoney
-        },
-        { name: "MIREMPET ", amount: totalPedidoMIREMPET, Icon: Store },
-        { name: "Cancelados ", amount: totalPedidoCancelados, Icon: Store }
-    ];
-
-    const renderColorStatus = ({ id, nome }) => {
-        switch (id) {
-            case 1:
-                return <Small style={{ backgroundColor: paletaCor.Estudo }}>{nome}</Small>;
-                break;
-            case 2:
-                return <Small style={{ backgroundColor: paletaCor.Trabalho }}>{nome}</Small>;
-                break;
-            case 3:
-                return <Small style={{ backgroundColor: paletaCor.Residência }}>{nome}</Small>;
-                break;
-            case 4:
-                return <Small style={{ backgroundColor: paletaCor.Turismo }}>{nome}</Small>;
-                break;
-            case 5:
-                return <Small bgcolor={bgSecondary}>{nome}</Small>;
-                break;
-            case 6:
-                return <Small bgcolor={bgSecondary}>{nome}</Small>;
-                break;
-            case 7:
-                return <Small bgcolor={bgError}>{nome}</Small>;
-                break;
-
-            default:
-                return <Small bgcolor={bgPrimary}>{nome}</Small>;
-                break;
-        }
-    };
-
-    async function Aprovar(id) {
-        await api
-            .editQuery(`processo/${id}?statusId=5`)
-            .then((res) => {
-                if (res.status == 200) {
-                    Notify(res?.data?.message);
-                }
-            })
-            .catch((err) => {
-                NotifyError("Erro ao realizar esta operação");
-                console.log(err);
-            });
-    }
-
-    async function Recusar(id) {
-        setLoadingPedido(true);
-        await api
-            .editQuery(`processo/${id}?statusId=6`)
-            .then((res) => {
-                if (res.status == 200) {
-                    Notify(res?.data?.message);
-                }
-            })
-            .catch((err) => {
-                NotifyError("Erro ao realizar esta operação");
-                console.log(err);
-            })
-            .finally(() => {
-                setLoadingPedido(false);
-            });
-    }
-
-    const renderColorVisto = ({ id, nome }) => {
-        switch (id) {
-            case 1:
-                return <Small style={{ backgroundColor: paletaCor.Trabalho }}>{nome}</Small>;
-                break;
-            case 2:
-                return <Small style={{ backgroundColor: paletaCor.Turismo }}>{nome}</Small>;
-                break;
-            case 3:
-                return <Small style={{ backgroundColor: paletaCor.Residência }}>{nome}</Small>;
-                break;
-            case 4:
-                return <Small style={{ backgroundColor: paletaCor.Negócios }}>{nome}</Small>;
-                break;
-            case 5:
-                return <Small bgcolor={bgSecondary}>{nome}</Small>;
-                break;
-            case 6:
-                return <Small bgcolor={bgSecondary}>{nome}</Small>;
-                break;
-            case 7:
-                return <Small bgcolor={bgError}>{nome}</Small>;
-                break;
-
-            default:
-                return <Small bgcolor={bgPrimary}>{nome}</Small>;
-                break;
-        }
-    };
-    const filteredProcessos = pedidos?.filter((pedido) =>
-        pedido?.numero.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
     const styleDropdown = {};
     return (
         <AppButtonRoot>
-            <TextField
-                label="Pesquisar"
-                variant="outlined"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                fullWidth
-                margin="normal"
-            />
-            <SimpleCard>
-                <div className="w-100 d-flex  justify-content-between">
-                    <Title>Listagem de pedidos de emissão de visto</Title>
-                    <div>
-                        <Link to={"/pedidos/add"}>
-                            <StyledButton variant="contained" color="success">
-                                Criar Novo
-                            </StyledButton>
-                        </Link>
-                        <Link
-                            onClick={() => {
-                                alert("Em desenvolvimento");
-                            }}
-                        >
-                            <StyledButton variant="contained" color="info">
-                                Gerar Relatorio PDF <Download></Download>
-                            </StyledButton>
-                        </Link>
-                    </div>
+            <>
+                <CModal
+                    alignment="center"
+                    visible={visibleMapa}
+                    onClose={() => setVisibleMapa(false)}
+                    aria-labelledby="VerticallyCenteredExample"
+                >
+                    <CModalHeader>
+                        <CModalTitle id="VerticallyCenteredExample">Emissão de Mapa</CModalTitle>
+                    </CModalHeader>
+                    <CForm onSubmit={handleSubmit(gerarMapa)} >
+                        <CModalBody>
+
+                            <CRow className="mb-4">
+
+                                <CCol>
+                                    <CFormSelect {...register("tipoVistoId")} defaultValue={1} size="sm"
+                                        id="validationServer05" label="Tipo: ">
+                                        <option value={1}>
+                                            Turismo
+                                        </option>
+                                        <option value={2}>
+                                            Trabalho
+                                        </option>
+                                        <option value={3}>
+                                            Curta Duração
+                                        </option>
+                                        <option value={4}>
+                                            Fronteira
+                                        </option>
+                                    </CFormSelect>
+                                </CCol>
+
+                                <CCol>
+                                    <CFormSelect {...register("projectoId")} defaultValue={1} size="sm"
+                                        id="validationServer05" label="Projecto">
+                                        {
+                                            projectos?.map((item) => (
+                                                <option value={item?.id}>
+                                                    {item?.nome}
+                                                </option>
+
+                                            ))
+                                        }
+                                    </CFormSelect>
+                                </CCol>
+
+                            </CRow>
+
+                            <CRow>
+                                <CCol>
+                                    <CFormSelect defaultValue={new Date().getFullYear().toString()} {...register("year")} size="sm" id="validationServer06" label="Ano">
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2026">2026</option>
+                                        <option value="2027">2027</option>
+                                        <option value="2028">2028</option>
+                                    </CFormSelect>
+                                </CCol>
+                                <CCol>
+                                    <CFormSelect {...register("month")} size="sm" defaultValue={new Date().getMonth() + 1} id="validationServer07" label="Mês">
+                                        <option value="1">Janeiro</option>
+                                        <option value="2">Fevereiro</option>
+                                        <option value="3">Março</option>
+                                        <option value="4">Abril</option>
+                                        <option value="5">Maio</option>
+                                        <option value="6">Junho</option>
+                                        <option value="7">Julho</option>
+                                        <option value="8">Agosto</option>
+                                        <option value="9">Setembro</option>
+                                        <option value="10">Outubro</option>
+                                        <option value="11">Novembro</option>
+                                        <option value="12">Dezembro</option>
+                                    </CFormSelect>
+                                </CCol>
+                            </CRow>
+
+
+
+
+                        </CModalBody>
+                        <CModalFooter>
+                            <CButton color="secondary" onClick={() => setVisibleMapa(false)}>
+                                Cancelar
+                            </CButton>
+                            {loading ? (
+                                <CSpinner></CSpinner>
+                            ) : (
+                                <CButton type="submit" color="primary">
+                                    Gerar
+                                </CButton>
+                            )}
+                        </CModalFooter>
+                    </CForm>
+                </CModal>
+            </>
+            <>
+
+                <CModal
+                    alignment="center"
+                    visible={visibleAprovar}
+                    onClose={() => setVisibleAprovar(false)}
+                    aria-labelledby="VerticallyCenteredExample"
+                >
+                    <CModalHeader>
+                        <CModalTitle id="VerticallyCenteredExample">Aprovação de Solicitação</CModalTitle>
+                    </CModalHeader>
+                    <CForm onSubmit>
+                        <CModalBody>
+                            <CFormTextarea {...register("descricao")}
+                                text={
+                                    <>{errors?.descricao && <p className="text-error">{errors?.descricao?.message}</p>}</>
+                                }
+                            ></CFormTextarea>
+                        </CModalBody>
+                        <CModalFooter>
+                            <CButton color="secondary" onClick={() => setVisibleAprovar(false)}>
+                                Cancelar
+                            </CButton>
+                            {loading ? (
+                                <CSpinner></CSpinner>
+                            ) : (
+                                <CButton type="submit" color="primary">
+                                    Enviar
+                                </CButton>
+                            )}
+                        </CModalFooter>
+                    </CForm>
+                </CModal>
+            </>
+            <CAlert color="info">
+                acompanho todo fluxo dos processos
+            </CAlert>
+
+            <div className="w-100 d-flex  justify-content-between">
+                <strong>Processos Pendentes({totalProcessos})   <Person></Person> </strong>
+                <div className="d-flex">
+                    <Link
+                        onClick={() => {
+                            setVisibleMapa(prev => true)
+                        }}
+                    >
+                        <StyledButton className="d-flex align-content-center" size="sm" variant="contained" color="success">
+                            Mapa <Print></Print>
+                        </StyledButton>
+
+                    </Link>
+
+                    <Link to={`/clientes/${clientId}/processos/add`}>
+                        <StyledButton className="d-flex align-content-center" size="sm" variant="outlined" color="success">
+                            Criar Novo <Add></Add>
+                        </StyledButton>
+                    </Link>
                 </div>
-            </SimpleCard>
-            <Box pt={1}>{/* <Campaigns /> */}</Box>
 
-            <ContentBox className="analytics h-auto">
-                <StatCardsLine cardList={cardList}></StatCardsLine>
-            </ContentBox>
+            </div>
 
-            <Box pt={1}></Box>
+            <Box pt={4}>{/* <Campaigns /> */}</Box>
 
             <Card elevation={3} sx={{ pt: "10px", mb: 3 }}>
                 <CContainer className="d-flex justify-content-between">
-                    <div className="btn-group" role="group" aria-label="Basic radio toggle button group">
-                        <div className="d-flex aling-items-center justify-content-center flex-column">
-                            <div>
-                                {/* <Select size="small" defaultValue={new Date()}>
-                    <MenuItem value={new Date()}>Este Mês</MenuItem>
-                    <MenuItem value={new Date(new Date().setMonth())}>Mês Anterior</MenuItem>
-                  </Select> */}
-                                <CDropdown>
-                                    <CDropdownToggle>{tituloEntidade}</CDropdownToggle>
-                                    <CDropdownMenu container="body">
-                                        <CDropdownItem
-                                            onClick={() => {
-                                                setFazeId((prev) => null);
-                                                setTituloEntidade((prev) => "Entidade");
-                                            }}
-                                            href="#"
-                                        >
-                                            Todos
-                                        </CDropdownItem>
-                                        {entidades?.map((entidade) => (
-                                            <CDropdownItem
-                                                onClick={() => {
-                                                    setFazeId(entidade?.id);
-                                                    setTituloEntidade((prev) => entidade?.nome);
-                                                }}
-                                                href="#"
-                                            >
-                                                {entidade?.nome}
-                                            </CDropdownItem>
-                                        ))}
-                                    </CDropdownMenu>
-                                </CDropdown>
-                                <CDropdown style={styleDropdown}>
-                                    <CDropdownToggle style={styleDropdown}>{tituloStatus}</CDropdownToggle>
-                                    <CDropdownMenu style={styleDropdown}>
-                                        <CDropdownItem
-                                            onClick={() => {
-                                                setStatusId((prev) => null);
-                                                setTituloStatus((prev) => "Status");
-                                            }}
-                                            href="#"
-                                        >
-                                            Todos
-                                        </CDropdownItem>
-                                        {statusPedidos?.map((status) => (
-                                            <CDropdownItem
-                                                onClick={() => {
-                                                    setStatusId(status?.id);
-                                                    setTituloStatus((prev) => status?.nome);
-                                                }}
-                                                href="#"
-                                            >
-                                                {status?.nome}
-                                            </CDropdownItem>
-                                        ))}
-                                    </CDropdownMenu>
-                                </CDropdown>
-                            </div>
+                    <CForm>
+                        <div className="d-flex w-100   "  >
 
-                            <CRow></CRow>
+                            <CFormSelect {...register("stepId")} size="sm"
+                                id="validationServer05"  >
+                                <option disabled value={null}>
+                                    Faze
+                                </option>
+                                <option value={1}>
+                                    Legalizção
+                                </option>
+                                <option value={2}>
+                                    MIREX
+                                </option>
+                                <option value={3}>
+                                    MIREMPET
+                                </option>
+                                <option value={4}>
+                                    SME
+                                </option>
+                            </CFormSelect>
+                            <CFormSelect {...register("statusId")} size="sm"
+                                id="validationServer05"  >
+                                <option disabled>
+                                    Status
+                                </option>
+
+                                <option value={1}>
+                                    Pendente
+                                </option>
+                                <option value={2}>
+                                    Em Andamento
+                                </option>
+                                <option value={3}>
+                                    Aprovado
+                                </option>
+                                <option value={4}>
+                                    Recusado
+                                </option>
+                                <option value={5}>
+                                    Cancelado
+                                </option>
+                                <option value={6}>
+                                    Finalizado
+                                </option>
+
+                            </CFormSelect>
+                            <LoadingButton>Buscar</LoadingButton>
                         </div>
+
+                    </CForm>
+                </CContainer>
+
+                <CContainer>
+                    <CInputGroup size="sm">
+                        <CInputGroupText size="sm">
+                            <Search size="sm"></Search>
+                        </CInputGroupText>
+                        <CFormInput
+                            type="text"
+                            size="sm"
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            placeholder="beneficiario, passaporte, codigo, visto, data, faze, status"
+                        />
+                    </CInputGroup>
+
+                    <div className="d-flex w-100   "  >
+
+                        <CFormSelect size="sm"
+                            onChange={(event) => { setOrderBy(prev => event.target.value) }}
+                            id="validationServer05"  >
+                            <option value={"nome"} selected>
+                                Ordenar por
+                            </option>
+
+                            <option value={"createdAt"}>
+                                Data de Criação
+                            </option>
+                            <option value={"nome"}>
+                                nome
+                            </option>
+                            <option value={"clienteId"}>
+                                cliente
+                            </option>
+
+
+                        </CFormSelect>
+                        <CFormSelect onChange={(event) => { setOrder(prev => event.target.value) }}
+                            size="sm"
+                            id="validationServer05"  >
+                            <option value={"DESC"} selected>
+                                ordenar
+                            </option>
+
+                            <option value={"ASC"}>
+                                Ascendente
+                            </option>
+                            <option value={2}>
+                                Decrescente
+                            </option>
+
+                        </CFormSelect>
+                        <CFormInput onChange={(event) => setDate(prev => new Date(event.target.value))} size="sm" type="date"></CFormInput>
                     </div>
 
-                    <div role="group" aria-label="Basic radio toggle button group flex-0">
-                        <StyledButton
-                            style={{ borderRadius: 0 }}
-                            onClick={() => setTipoVistoId((prev) => null)}
-                            className="m-0"
-                            variant={tipoVistoId === null ? "contained" : "outlined"}
-                            color="primary"
-                        >
-                            Todos
-                        </StyledButton>
-                        <StyledButton
-                            style={{ borderRadius: 0 }}
-                            onClick={() => setTipoVistoId((prev) => 1)}
-                            className="m-0"
-                            variant={tipoVistoId === 1 ? "contained" : "outlined"}
-                            color="primary"
-                        >
-                            Turismo
-                        </StyledButton>
-                        <StyledButton
-                            style={{ borderRadius: 0 }}
-                            className="m-0"
-                            onClick={() => setTipoVistoId((prev) => 2)}
-                            variant={tipoVistoId === 2 ? "contained" : "outlined"}
-                            color="primary"
-                        >
-                            Trabalho
-                        </StyledButton>
-                        <StyledButton
-                            onClick={() => setTipoVistoId((prev) => 3)}
-                            style={{ borderRadius: 0 }}
-                            className="m-0"
-                            variant={tipoVistoId === 3 ? "contained" : "outlined"}
-                            color="primary"
-                        >
-                            Curta Duração
-                        </StyledButton>{" "}
-                        <StyledButton
-                            onClick={() => setTipoVistoId((prev) => 4)}
-                            style={{ borderRadius: 0 }}
-                            className="m-0"
-                            variant={tipoVistoId === 4 ? "contained" : "outlined"}
-                            color="primary"
-                        >
-                            Fronteira
-                        </StyledButton>
-                    </div>
                 </CContainer>
-                <CardHeader>
-                    <Link to={"/pedidos/add"}></Link>
-                </CardHeader>
+
 
                 <Box overflow="auto">
+
                     <ProductTable>
                         <TableHead>
                             <TableRow>
-                                <TableCell colSpan={2} sx={{ px: 2 }}>
-                                    Nº proc.
+                                <TableCell colSpan={5} sx={{ px: 2 }}>
+                                    Beneficiario
                                 </TableCell>
-
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Nº Pass.
-                                </TableCell>
-                                <TableCell colSpan={4} sx={{ px: 2 }}>
-                                    Cliente
-                                </TableCell>
-
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Entidade/Faze
-                                </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
+                                <TableCell colSpan={3} sx={{ px: 3 }}>
                                     Visto
                                 </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Data Subtd.
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Passaporte
                                 </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    dat.prev
+                                </TableCell>
+                                {/* <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Atraso
+                                </TableCell> */}
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Faze
+                                </TableCell>
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
                                     Status
                                 </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    data
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Data
                                 </TableCell>
-                                <TableCell colSpan={1} sx={{ px: 0 }}>
-                                    Acções
+
+                                <TableCell colSpan={2} sx={{ px: 2 }}>
+                                    Acção
+
                                 </TableCell>
                             </TableRow>
                         </TableHead>
 
-                        <TableBody>
-                            {loadPedido ? (
+                        <TableBody style={{ overflow: "scroll" }}>
+                            {loading ? (
                                 <CSpinner></CSpinner>
                             ) : (
                                 <>
                                     {filteredProcessos
                                         ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                        ?.map((processo, index) => (
+                                        ?.map((projecto, index) => (
                                             <TableRow key={index} hover>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{processo?.numero}</Paragraph>
-                                                </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {processo?.requerente?.Documentos?.[0]?.numero}
-                                                    </Paragraph>
-                                                </TableCell>
-                                                <TableCell
-                                                    colSpan={4}
-                                                    align="left"
-                                                    sx={{ px: 0, textTransform: "capitalize" }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            {processo?.requerente?.nome}
-                                                        </Paragraph>
+
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={5}>
+                                                    {/* <StyledAvatar src={tecn?.avatar?.url} /> */}
+                                                    <Box display="flex" alignItems="center" gap={3}>
+                                                        <Avatar src={projecto?.processo?.beneficiario?.avatar?.url} />
+                                                        <Paragraph style={{ textAlign: "center", fontSize: "0.74rem" }}>   {projecto?.processo?.beneficiario?.nome}</Paragraph>
                                                     </Box>
                                                 </TableCell>
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={3}>
+                                                    <Paragraph >{VistoBadge({ status: projecto?.processo?.tipoVistoId })}</Paragraph>
+                                                </TableCell>
+                                                <TableCell sx={{ px: 2 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{projecto?.processo?.passaporteNumero}</Paragraph>
+                                                </TableCell>
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={3}  >
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>{new Date(projecto?.updatedAt).toLocaleDateString()}</CBadge>
+                                                    </Paragraph>
+                                                </TableCell>
 
+
+                                                {/* <TableCell
+                                                    sx={{ px: 3 }} align="left" colSpan={3}
+                                                >
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>24/04/2024</CBadge>
+                                                    </Paragraph>
+
+                                                </TableCell> */}
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: fSize }}>
+
+                                                        {status: projecto?.step?.id }
+                                                    </Paragraph>
+                                                </TableCell>
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        {StatusBadge({ status: projecto?.status?.id })}
+
+                                                    </Paragraph>
+                                                </TableCell>
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <Paragraph style={{ fontSize: fSize }}>
-                                                        {processo?.fazeActual?.nome}
+                                                        {formatDateDifference(new Date(projecto?.createdAt))}
                                                     </Paragraph>
                                                 </TableCell>
 
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    {renderColorVisto({
-                                                        id: processo?.tipoVisto?.id,
-                                                        nome: processo?.tipoVisto?.nome
-                                                    })}
-                                                </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {formatDateDifference(new Date(processo?.createdAt))}
-                                                    </Paragraph>
-                                                </TableCell>
-
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    {renderColorStatus({
-                                                        id: processo?.statusActual?.id,
-                                                        nome: processo?.statusActual?.nome
-                                                    })}
-                                                </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {formatDateDifference(new Date(processo?.updatedAt))}
-                                                    </Paragraph>
-                                                </TableCell>
-
-                                                <TableCell>
                                                     <CFormSelect
-                                                        style={{ fontSize: "12px", minWidth: "6.45rem" }}
+                                                        style={{ fontSize: "12px", minWidth: "5.45rem" }}
+                                                        size="sm"
                                                         id="validationServer04"
-                                                        onChange={(e) => {
+                                                        onChange={async (e) => {
                                                             if (e.target.value == 1) {
                                                                 return goto(
-                                                                    `/processo/detalhe/${processo?.id}?_statusId=${processo?.statusActualId}&_fazeId=${processo?.fazeActualId}`
+                                                                    `/processos/${projecto?.id}/detail`
+                                                                );
+                                                            }
+                                                            if (e.target.value == 2) {
+                                                                return goto(
+                                                                    `/processos/${projecto?.passaporte}/edit`
                                                                 );
                                                             }
 
                                                             if (e.target.value == 3) {
-                                                                setOpenRecusar((prev) => true);
+                                                                console.log("SOLICI ID", projecto?.id);
+                                                                setPedido(prev => projecto?.id);
+                                                                setUpdateStatusId(prev => 3);
+                                                                setVisibleAprovar((prev) => true);
+
                                                             }
-                                                            if (e.target.value == 2) {
-                                                                setOpenAprovar((prev) => true);
+                                                            if (e.target.value == 4) {
+                                                                setOpenRecusar((prev) => !true);
                                                             }
+
                                                             console.log(e.target.value);
                                                         }}
-                                                        sx={2}
+
+                                                        sx={0}
                                                     >
                                                         <option>selecione</option>
-
                                                         <option value={1}>visualisar</option>
-                                                        <option value={2}>Aprovar</option>
-                                                        <option value={3}>Recusar</option>
+                                                        <option value={2}>Editar</option>
+
+
                                                     </CFormSelect>
                                                 </TableCell>
 
-                                                <Dialog
-                                                    open={openAprovar}
-                                                    onClose={handleCloseAprovar}
-                                                    aria-labelledby="form-dialog-title"
-                                                >
-                                                    <FormAprovar
-                                                        handleClose={handleCloseAprovar}
-                                                        processoId={processo?.id}
-                                                    ></FormAprovar>
-                                                </Dialog>
-
-                                                <Dialog
-                                                    open={openRecusar}
-                                                    onClose={handleCloseRecusar}
-                                                    aria-labelledby="form-dialog-title"
-                                                >
-                                                    <FormRecusar
-                                                        handleClose={handleCloseRecusar}
-                                                        processoId={processo?.id}
-                                                    ></FormRecusar>
-                                                </Dialog>
                                             </TableRow>
                                         ))}
                                 </>
@@ -809,7 +665,7 @@ export default function Pendentes() {
                         page={page}
                         component="div"
                         rowsPerPage={rowsPerPage}
-                        count={pedidos?.length}
+                        count={processos?.length}
                         onPageChange={handleChangePage}
                         rowsPerPageOptions={[5, 10, 25]}
                         onRowsPerPageChange={handleChangeRowsPerPage}
@@ -819,6 +675,6 @@ export default function Pendentes() {
                 </Box>
                 <Box pt={3}></Box>
             </Card>
-        </AppButtonRoot>
+        </AppButtonRoot >
     );
 }

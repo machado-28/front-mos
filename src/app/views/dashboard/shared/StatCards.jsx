@@ -72,7 +72,13 @@ export default function StatCards({
               </Box>
             </ContentBox>
 
-
+            <Tooltip title="View Details" placement="top">
+              <Link replace={true} to={path}>
+                <IconButton>
+                  <ArrowRightAlt />
+                </IconButton>
+              </Link>
+            </Tooltip>
           </StyledCard>
         </Grid>
       ))}

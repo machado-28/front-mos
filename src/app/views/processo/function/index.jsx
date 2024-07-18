@@ -7,8 +7,9 @@ function StatusBadge({ status }) {
     // Defina as cores e textos de acordo com o status
     switch (status) {
         case 1: // Se status for 1
-            badgeColor = 'bg-primary'; // Cor azul
-            badgeText = 'Aguardando'; // Texto 'Aguardando'
+            badgeColor = 'bg-warning'; // Cor azul
+            textColor = " text-black"
+            badgeText = 'pendente'; // Texto 'Aguardando'
 
             break;
         case 2: // Se status for 2
@@ -100,12 +101,12 @@ function VistoBadge({ status }) {
             textColor = ""
             badgeText = 'Trabalho'; // Texto 'Em andamento'
             break;
-        case 5: // Se status for 5
+        case 3: // Se status for 5
             badgeColor = 'bg-info'; // Cor azul clara
             badgeText = 'Curta Duração'; // Texto 'Cancelado'
             textColor = ""
             break;
-        case 3: // Se status for 3
+        case 4: // Se status for 3
             badgeColor = 'bg-success'; // Cor verde
             badgeText = 'Fronteira'; // Texto 'Ativo'
             textColor = " text-black"
@@ -121,4 +122,4 @@ function VistoBadge({ status }) {
     );
 }
 
-export { StatusBadge, VistoBadge }
+export { StatusBadge, VistoBadge, CustomBadge }

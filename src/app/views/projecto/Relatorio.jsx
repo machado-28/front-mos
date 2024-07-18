@@ -1,5 +1,4 @@
 import {
-    CAvatar,
     CBadge,
     CButton,
     CCol,
@@ -16,23 +15,25 @@ import {
     CModalFooter,
     CModalHeader,
     CModalTitle,
-    CRow,
     CSpinner
 } from "@coreui/react";
 import {
+    AppRegistration,
     Download,
+    FileOpen,
+    Folder,
     FolderCopySharp,
-    Image,
     Person,
     PlusOne,
     Search,
     TroubleshootOutlined
 } from "@mui/icons-material";
 import {
+    Avatar,
+    Badge,
     Box,
     Button,
     Card,
-    Switch,
     Table,
     TableBody,
     TableCell,
@@ -46,18 +47,21 @@ import {
 import { Paragraph } from "app/components/Typography";
 import { useApi } from "app/hooks/useApi";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import "./style.css";
 // import { ChartLine } from "./ChartLine";
 import { NotifyError } from "app/utils/toastyNotification";
 import { formatDateDifference } from "app/utils/validate";
 
-import { Cliente } from "./util";
+import { Projecto } from "./util";
 import { StatusBadge, VistoBadge } from "./function";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Add from "@mui/icons-material/Add";
+import useAuth from "app/hooks/useAuth";
+import { ClockIcon } from "@mui/x-date-pickers";
+
 
 // STYLED COMPONENTS
 const CardHeader = styled(Box)(() => ({
@@ -109,11 +113,6 @@ const AppButtonRoot = styled("div")(({ theme }) => ({
     "& .input": { display: "none" }
 }));
 export default function Listar() {
-    const clienteClass = new Cliente()
-
-    const [loading, setLoading] = useState(false);
-    const [clientes, setClientes] = useState([]);
-
     const { palette } = useTheme();
     const bgError = palette.error.main;
     const bgPrimary = palette.primary.main;
@@ -121,8 +120,6 @@ export default function Listar() {
     const [page, setPage] = useState(0);
     const [OrigemId, setOrigemId] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
-    const [visibleAprovar, setVisibleAprovar] = useState(false);
-    const [LoadingAprovar, setLoadingAprovar] = useState(false);
     const goto = useNavigate();
 
     const handleChangePage = (_, newPage) => {
@@ -167,99 +164,51 @@ export default function Listar() {
         progressive: true
     });
 
-    const { passaporte: clientId = 1 } = useParams()
-    // let clientId=1
+    let { clienteId } = useParams();
+    const { user } = useAuth();
+    const { gestorId } = useParams();
+    let gestorInternoId = undefined;
+    let gestorExternoId = undefined;
 
-    async function actualizarStatus(data) {
-        setLoading(prev => !prev)
-        data.statusId = statusToUpdateId;
-        data.pedidoId = pedidoId
-        console.log("DATAFORM", data);
-        const c_pedido = new Cliente();
-        await c_pedido.actualizarStatus(data);
-        setLoading(prev => !prev)
-        window.location.reload()
+    if (user.clienteId) {
+        clienteId = user?.clienteId
+        gestorExternoId = gestorId;
+
+    }
+    else {
+        gestorInternoId = gestorId;
+        gestorExternoId = gestorId;
     }
 
-    async function ListarClientes() {
-        try {
-            setLoading((prev) => true);
-            const data = await clienteClass.buscarClientes()
-            console.log("MEUS CLIENTES", data);
-            setClientes(data)
 
-        } catch (error) {
-            console.log(error);
-            NotifyError(error)
-        }
-        finally {
-            setLoading((prev) => false);
-        }
+    // let clienteId=1
+    const [loading, setLoading] = useState(false);
+    const [projectos, setProjectos] = useState([]);
+    const [order, setOrder] = useState("DESC");
+    const [orderBy, setOrderBy] = useState("nome");
+    const [date, setDate] = useState();
+
+
+    const projecto = new Projecto();
+    async function buscarProjectos() {
+        let proj = await projecto.buscar({ clienteId, order, orderBy, date, gestorExternoId, gestorInternoId });
+        setProjectos(prev => proj)
     }
 
-    const [searchParams, setSearchParams] = useSearchParams();
-
-    // Obtener un parámetro de consulta específico
-    const queryParam = searchParams.get('gestor') || '';
-
-    // Función para actualizar los parámetros de consulta
-    const updateQueryParam = (newQuery) => {
-        setSearchParams({ query: newQuery });
-    };
-    useEffect(() => {
-        ListarClientes();
-
-    }, []);
-
-
-
-    const filteredClientes = clientes?.filter((cliente) =>
-        cliente?.nome.toLowerCase().includes(searchTerm?.toLowerCase()) || cliente?.nomeEmpresa?.toLowerCase().includes(searchTerm?.toLowerCase())
-        || cliente?.email?.toLowerCase().includes(searchTerm?.toLowerCase()) || cliente?.telefone1?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
-        cliente?.telefone2?.toLowerCase().includes(searchTerm?.toLowerCase()) || cliente?.ramo?.toLowerCase().includes(searchTerm?.toLowerCase())
+    const filteredprojectoes = projectos?.filter((project) =>
+        project?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
     );
 
 
+
+    useEffect(() => {
+        buscarProjectos()
+    }, [order, orderBy, clienteId, date, searchTerm])
     const styleDropdown = {};
     return (
         <AppButtonRoot>
-            <>
-                <CModal
-                    alignment="center"
-                    visible={visibleAprovar}
-                    onClose={() => setVisibleAprovar(false)}
-                    aria-labelledby="VerticallyCenteredExample"
-                >
-                    <CModalHeader>
-                        <CModalTitle id="VerticallyCenteredExample">Cliente status</CModalTitle>
-                    </CModalHeader>
-                    <CForm onSubmit={handleSubmit(actualizarStatus)}>
-                        <CModalBody>
-                            <CRow>
-                                <CInputGroup>
-                                    <Switch name="activo"></Switch>
-                                </CInputGroup>
-
-                            </CRow>
-                        </CModalBody>
-                        <CModalFooter>
-                            <CButton color="secondary" onClick={() => setVisibleAprovar(false)}>
-                                Cancelar
-                            </CButton>
-                            {LoadingAprovar ? (
-                                <CSpinner></CSpinner>
-                            ) : (
-                                <CButton type="submit" color="primary">
-                                    Actualizar
-                                </CButton>
-                            )}
-                        </CModalFooter>
-                    </CForm>
-                </CModal>
-            </>
-
             <div className="w-100 d-flex  justify-content-between">
-                <strong>Clientes   ({clientes?.length})   <Person></Person> </strong>
+                <strong>Relatorio ({projectos?.length})  <Person></Person></strong>
                 <div>
                     <Link
                         onClick={() => {
@@ -269,7 +218,7 @@ export default function Listar() {
 
                     </Link>
 
-                    <Link to={"/clientes/add"}>
+                    <Link to={`/clientes/${clienteId}/projectos/add`}>
                         <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
                             Criar Novo <Add></Add>
                         </StyledButton>
@@ -293,33 +242,39 @@ export default function Listar() {
                             size="sm"
                             value={searchTerm}
                             onChange={handleSearchChange}
-                            placeholder="nome,empresa, email, telefone"
+                            placeholder="Buscar..."
                         />
                     </CInputGroup>
 
                     <div className="d-flex w-100   "  >
 
                         <CFormSelect size="sm"
+                            onChange={(event) => { setOrderBy(prev => event.target.value) }}
                             id="validationServer05"  >
-                            <option selected>
+                            <option value={"nome"} selected>
                                 Ordenar por
                             </option>
 
-                            <option value={1}>
+                            <option value={"createdAt"}>
                                 Data de Criação
                             </option>
-                            <option value={2}>
+                            <option value={"nome"}>
                                 nome
                             </option>
-
-                        </CFormSelect>
-                        <CFormSelect size="sm"
-                            id="validationServer05"  >
-                            <option selected>
-                                Orientação
+                            <option value={"clienteId"}>
+                                cliente
                             </option>
 
-                            <option value={1}>
+
+                        </CFormSelect>
+                        <CFormSelect onChange={(event) => { setOrder(prev => event.target.value) }}
+                            size="sm"
+                            id="validationServer05"  >
+                            <option value={"DESC"} selected>
+                                ordenar
+                            </option>
+
+                            <option value={"ASC"}>
                                 Ascendente
                             </option>
                             <option value={2}>
@@ -327,39 +282,27 @@ export default function Listar() {
                             </option>
 
                         </CFormSelect>
-                        <CFormInput size="sm" type="date"></CFormInput>
+                        <CFormInput onChange={(event) => setDate(prev => new Date(event.target.value))} size="sm" type="date"></CFormInput>
                     </div>
-
                 </CardHeader>
-
                 <Box overflow="auto">
                     <ProductTable>
                         <TableHead>
                             <TableRow>
-                                <TableCell colSpan={2} sx={{ px: 3 }}>
-                                    Id.
+
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Projecto
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
-                                    Nome
+                                    ges Interno
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
-                                    Empresa
+                                    ges externo
                                 </TableCell>
-                                <TableCell colSpan={3} sx={{ px: 0 }}>
-                                    Email
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Tot.processos
                                 </TableCell>
-
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Tel.1
-                                </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Tel.2
-                                </TableCell>
-
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Status
-                                </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
                                     Dat. registo
                                 </TableCell>
                                 <TableCell colSpan={1} sx={{ px: 0 }}>
@@ -373,100 +316,96 @@ export default function Listar() {
                                 <CSpinner></CSpinner>
                             ) : (
                                 <>
-                                    {filteredClientes
+                                    {filteredprojectoes
                                         ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                        ?.map((cliente, index) => (
+                                        ?.map((proj, index) => (
                                             <TableRow key={index} hover>
 
-                                                <TableCell sx={{ px: 3 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{cliente?.id}</Paragraph>
-                                                </TableCell>
 
                                                 <TableCell
                                                     colSpan={3}
                                                     align="left"
                                                     sx={{ px: 2, textTransform: "capitalize" }}
                                                 >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            {cliente?.nome}
-                                                        </Paragraph>
+                                                    <Box display="flex" alignItems="center" gap={4}>
+
+                                                        <Paragraph> <Folder fontSize="large" color={index % 2 == 0 ? "info" : "warning"}></Folder>   {proj?.nome}</Paragraph>
                                                     </Box>
                                                 </TableCell>
-                                                <TableCell
-                                                    colSpan={3}
-                                                    align="left"
-                                                    sx={{ px: 2, textTransform: "capitalize" }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            {cliente?.nomeEmpresa}
-                                                        </Paragraph>
-                                                    </Box>
-                                                </TableCell>
-                                                <TableCell
-                                                    colSpan={3}
-                                                    align="left"
-                                                    sx={{ px: 2, textTransform: "capitalize" }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            {cliente?.email}
-                                                        </Paragraph>
-                                                    </Box>
-                                                </TableCell>
-
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
                                                     <Paragraph style={{ fontSize: fSize }}>
-                                                        {cliente?.telefone1}
-                                                    </Paragraph>
-
-                                                </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {cliente?.telefone2}
-                                                    </Paragraph>
-
-                                                </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-
-                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-danger text-black"}> {cliente?.activo == true ? "activo" : "inactivo"}</CBadge>
-                                                    </Paragraph>
-
-                                                </TableCell>
-
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {formatDateDifference(new Date(cliente?.createdAt))}
+                                                        <CBadge className={proj.gestorInterno?.nome ? "bg-warning text-black" : "bg-secondary text-black"} > {proj?.gestorInterno?.nome || "Não Definido"}  </CBadge>
                                                     </Paragraph>
                                                 </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <CBadge className="bg-info text-white" > {proj?.gestorExterno?.nome?.toUpperCase() || "INDEFINIDO"}  </CBadge>
+                                                    </Paragraph>
+                                                </TableCell>
+
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <CBadge className="bg-danger text-white fs-6" > {proj?.processos?.length || 0}  </CBadge>
+
+                                                    </Paragraph>
+                                                </TableCell>
+
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <ClockIcon></ClockIcon>
+                                                        {formatDateDifference(new Date(proj?.createdAt))}
+
+                                                    </Paragraph>
+                                                </TableCell>
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
                                                     <CFormSelect
                                                         style={{ fontSize: "12px", minWidth: "6.45rem" }}
                                                         id="validationServer04"
                                                         onChange={async (e) => {
                                                             if (e.target.value == 1) {
                                                                 return goto(
-                                                                    `/clientes/${cliente?.id}/detail`
+                                                                    `/clientes/${clienteId}/projectos/${proj?.id}/detalhar`
                                                                 );
                                                             }
                                                             if (e.target.value == 2) {
                                                                 return goto(
-                                                                    `/clientes/${cliente?.id}/editar`
+                                                                    `/projectos/${proj?.id}/editar/${proj?.clienteId}`
                                                                 );
-                                                            }
+                                                            } <CCol>
+                                                                <CFormSelect
+                                                                    label="Categoria"
+                                                                    aria-describedby="exampleFormControlInputHelpInline"
+                                                                    text={
+                                                                        errors.nacionalidade && (
+                                                                            <div className="text-light bg-danger">{errors.nacionalidade.message}</div>
+                                                                        )
+                                                                    }
+                                                                    required
+                                                                    {...register("categoria")}
+                                                                >
+                                                                    <option selected aria-readonly>selecione a categoria</option>
+                                                                    {[{ name: "1 vez" }, { name: "prorrogação" }]?.map((pais) => (
+                                                                        <option value={pais.name} key={pais.name}>
+                                                                            {pais.name}
+                                                                        </option>
+                                                                    ))}
+                                                                </CFormSelect>
+                                                                {errors.nacionalidade && (
+                                                                    <div className="text-light bg-danger">{errors.nacionalidade.message}</div>
+                                                                )}
+                                                            </CCol>
 
                                                             if (e.target.value == 3) {
-
-
-                                                                setVisibleAprovar(prev => true);
-
-
+                                                                console.log("projecto Id", proj?.id);
+                                                                setPedido(prev => proj?.id);
+                                                                setUpdateStatusId(prev => 3);
+                                                                setVisibleAprovar((prev) => true);
+                                                            }
+                                                            if (e.target.value == 4) {
+                                                                setOpenRecusar((prev) => !true);
                                                             }
 
-
-
+                                                            console.log(e.target.value);
                                                         }}
 
                                                         sx={0}
@@ -474,9 +413,6 @@ export default function Listar() {
                                                         <option>selecione</option>
                                                         <option value={1}>visualisar</option>
                                                         <option value={2}>Editar</option>
-                                                        <option value={3}>aprovar/recusar</option>
-
-
                                                     </CFormSelect>
                                                 </TableCell>
 
@@ -491,16 +427,16 @@ export default function Listar() {
                         page={page}
                         component="div"
                         rowsPerPage={rowsPerPage}
-                        count={clientes?.length}
+                        count={projectos?.length}
                         onPageChange={handleChangePage}
-                        rowsPerPageOptions={[5, 10, 25]}
+                        rowsPerPageOptions={[50, 100, 200]}
                         onRowsPerPageChange={handleChangeRowsPerPage}
-                        nextIconButtonProps={{ "aria-label": "Next Page" }}
-                        backIconButtonProps={{ "aria-label": "Previous Page" }}
+                        nextIconButtonProps={{ "aria-label": "Página seguinte" }}
+                        backIconButtonProps={{ "aria-label": "Página anterior" }}
                     />
                 </Box>
                 <Box pt={3}></Box>
             </Card>
-        </AppButtonRoot>
+        </AppButtonRoot >
     );
 }

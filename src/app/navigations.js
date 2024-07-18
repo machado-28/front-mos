@@ -42,6 +42,11 @@ export const AdminNavigations = [
         name: "Listar",
         path: "/projectos/list",
         icon: "list"
+      },
+      {
+        name: "Relatorio (PDF)",
+        path: "/projectos/relatorio",
+        icon: "list"
       }
     ]
   },
@@ -68,7 +73,11 @@ export const AdminNavigations = [
         path: "/processos/list",
         icon: "list"
       },
-
+      {
+        name: "Pendentes",
+        path: "/processos/pendentes",
+        icon: "list"
+      },
 
 
     ]
@@ -700,7 +709,7 @@ export const TecnicoProcessoNavigations = [
         path: "/processos/list",
         icon: "list"
       },
-      
+
     ]
   },
 ];

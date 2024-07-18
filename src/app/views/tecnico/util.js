@@ -20,9 +20,9 @@ class Tecnico {
             NotifyError("Erro ao Emitir PDF")
         })
     }
-    
 
-    async buscarTodos({ id, tipoId, orderBy, order, date, clienteId, painelId }) {
+
+    async buscarTodos({ id, tipoId, orderBy, order, date, clienteId, painelId } = {}) {
         const api = useApi()
         const tecnicos = await api.listQuery(`tecnicos?id=${id}&orderBy=${orderBy}&order=${order}&date=${date}&clienteId=${clienteId}&painelId=${painelId}`).then((resp) => {
             console.table("%ctecnicos", "font-size:xx-large; color: blue", resp?.data?.tecnicos);

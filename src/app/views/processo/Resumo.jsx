@@ -8,6 +8,7 @@ export default function Resumo() {
             name: "Tempo em atraso (dias)",
             amount: "4 dias",
             Icon: Group,
+            bgColor: "warning",
             path: "vistos/list"
         },
         {
@@ -25,7 +26,7 @@ export default function Resumo() {
             amount: "pendente",
             Icon: Folder
         },
-        
+
 
     ];
     return (
