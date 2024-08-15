@@ -1,4 +1,5 @@
 import {
+    CAlert,
     CBadge,
     CButton,
     CCol,
@@ -40,10 +41,10 @@ import {
     styled,
     useTheme
 } from "@mui/material";
-import { Paragraph } from "app/components/Typography";
+import { H2, Paragraph } from "app/components/Typography";
 import { useApi } from "app/hooks/useApi";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import "./style.css";
 // import { ChartLine } from "./ChartLine";
 import { NotifyError } from "app/utils/toastyNotification";
@@ -56,6 +57,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Add from "@mui/icons-material/Add";
 import useAuth from "app/hooks/useAuth";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
+import { Breadcrumb } from "app/components";
 
 // STYLED COMPONENTS
 const CardHeader = styled(Box)(() => ({
@@ -162,14 +165,14 @@ export default function Listar() {
     });
 
 
-    let {clienteId } = useParams();
-    
+    let { clienteId } = useParams();
+
 
     const { user } = useAuth();
 
     if (user?.clienteId !== null || user?.clienteId !== undefined) {
         clienteId = user?.clienteId
-        
+
     }
     if (user?.clienteId === null || user?.clienteId === undefined) {
         clienteId = useParams().clienteId
@@ -190,7 +193,7 @@ export default function Listar() {
     const tecnico = new Tecnico()
     async function buscarTecnicos() {
         const tecn = await tecnico.buscarTodos({ clienteId, order, orderBy, date });
-        
+
         setTecnicos(prev => tecn)
     }
     const filterTecnicos = tecnicos?.filter((tecni) =>
@@ -198,28 +201,35 @@ export default function Listar() {
     );
     useEffect(() => {
         buscarTecnicos()
-    }, [ order, orderBy, date]);
+    }, [order, orderBy, date]);
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
 
     return (
         <AppButtonRoot>
-            <div className="w-100 d-flex  justify-content-between">
-                <strong>Lista de Técnicos-beneficiários ({tecnicos?.length})  <Person></Person></strong>
-                <div>
-                    <Link
-                        onClick={() => {
-                            setVisibleMapa(prev => true)
-                        }}
-                    >
-                    </Link>
-                    <Link to={`/tecnicos/add/cliente/${clienteId}`}>
-                        <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
-                            Criar Novo <Add></Add>
-                        </StyledButton>
-                    </Link>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
+            <CAlert color="secondary">
+                <div className="w-100 d-flex  justify-content-between">
+                    <H2>Lista de Técnicos-beneficiários ({tecnicos?.length})  <Person></Person></H2>
+                    <div>
+                        <Link
+                            onClick={() => {
+                                setVisibleMapa(prev => true)
+                            }}
+                        >
+                        </Link>
+                        <Link to={`/tecnicos/add/cliente/${clienteId}`}>
+                            <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
+                                Criar Novo <Add></Add>
+                            </StyledButton>
+                        </Link>
+                    </div>
                 </div>
-
-            </div>
-
+            </CAlert>
             <Box pt={4}>{/* <Campaigns /> */}</Box>
 
             <Card elevation={3} sx={{ pt: "10px", mb: 3 }}>
@@ -324,14 +334,14 @@ export default function Listar() {
                                                 </TableCell>
 
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
-                                                    <Paragraph style={{   }}>
-                                                    <CBadge className={index % 2 == 0 ? "bg-info text-black" : `bg-success text-black`}> {tecn?.email} </CBadge>
+                                                    <Paragraph style={{}}>
+                                                        <CBadge className={index % 2 == 0 ? "bg-info text-black" : `bg-success text-black`}> {tecn?.email} </CBadge>
                                                     </Paragraph>
 
                                                 </TableCell>
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <Paragraph style={{}}>
-                                                    <CBadge className={index % 2 == 0 ? "bg-warning text-black" : `bg-danger`}> {tecn?.telefone} </CBadge>
+                                                        <CBadge className={index % 2 == 0 ? "bg-warning text-black" : `bg-danger`}> {tecn?.telefone} </CBadge>
                                                     </Paragraph>
 
                                                 </TableCell>
@@ -359,7 +369,7 @@ export default function Listar() {
                                                         onChange={async (e) => {
                                                             if (e.target.value == 1) {
                                                                 return goto(
-                                                                    `/tecnicos/${tecn?.id}/detalhar`
+                                                                    `/cliente/${clienteId}/tecnicos/${tecn?.id}/detalhar`
                                                                 );
                                                             }
                                                             if (e.target.value == 2) {
@@ -385,7 +395,7 @@ export default function Listar() {
                                                         sx={0}
                                                     >
                                                         <option>selecione</option>
-                                                        
+
                                                         <option value={2}>Editar</option>
                                                         <option value={3}>Apagar</option>
 

@@ -31,7 +31,7 @@ import {
 } from "@coreui/react";
 import { useApi } from "app/hooks/useApi";
 import { AppButtonRoot } from "app/components/AppBuutonRoot";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { functions, min, values } from "lodash";
 import { Bounce, toast } from "react-toastify";
 import { listaPais } from "app/utils/paises";
@@ -48,6 +48,7 @@ import { LoadingButton } from "@mui/lab";
 import useAuth from "app/hooks/useAuth";
 import { Gestores } from "app/views/Clientes/Gestores/util";
 import { Projecto } from "../util";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 export default function FormAdd() {
     const validadeDate = new ValidateData().byInterval;
@@ -56,7 +57,7 @@ export default function FormAdd() {
         nome: z
             .string()
             .min(1, { message: "Este campo é obrigatorio" })
-            
+
             .refine(
                 (name) => {
                     return capitalize(name);
@@ -80,7 +81,8 @@ export default function FormAdd() {
     } = useForm({
         resolver: zodResolver(addProcessoShema),
         shouldFocusError: true,
-        progressive: true
+        progressive: true,
+        defaultValues: {}
     });
 
     if (errors) console.log("ERRO", errors);
@@ -111,13 +113,15 @@ export default function FormAdd() {
             console.log("FORMULARIO ", dados);
             setLoading(true);
             const response = await projecto.criar(dados).then(async (response) => {
-
-            
-
+                reset()
                 setLoading(false);
+                console.log("DEU ERR", response?.data?.message);
+                if (!response?.data?.message)
+                    return;
                 Notify(response?.data?.message);
-                window.location.reload();
+
             });
+
         } catch (error) {
             NotifyError("Älgo deu Errado");
             console.log(error);
@@ -125,11 +129,18 @@ export default function FormAdd() {
 
         }
     }
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
 
     const styleInput = {};
+
     return (
         <CForm onSubmit={handleSubmit(PostData)} style={{ borderRadius: "none" }}>
-            <Box pt={4}></Box>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
             <div className="w-100 d-flex  justify-content-between">
                 <H2>Cadastro de Projecto   <Folder></Folder> </H2>
                 <div>
@@ -168,7 +179,7 @@ export default function FormAdd() {
             <CRow className="mb-4">
                 <CCol>
                     <CFormSelect
-                        label="Gestor 1s"
+                        label="Gestor Interno(Metálica)"
                         size="sm"
 
                         aria-describedby="exampleFormControlInputHelpInline"
@@ -194,7 +205,7 @@ export default function FormAdd() {
                 <CCol>
 
                     <CFormSelect
-                        label="Gestor 2"
+                        label="Gestor Externo (Cliente)"
                         aria-describedby="exampleFormControlInputHelpInline"
                         text={
                             errors.gestorExternoId && (

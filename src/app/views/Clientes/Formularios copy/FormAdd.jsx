@@ -60,7 +60,7 @@ export default function FormAdd() {
                 },
                 { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
             ),
-        sindicato: z
+        consulado: z
             .string()
             .regex(validatePersonNames, "incorrecto")
             .refine(
@@ -291,6 +291,8 @@ export default function FormAdd() {
                 const { data } = response
                 console.log("RESPOSTA SUCESSO", response);
                 setLoading(false);
+                if (!response?.data?.message)
+                    return;
                 Notify(response?.data?.message);
                 window.location.reload();
             });
@@ -413,7 +415,7 @@ export default function FormAdd() {
                     )}
                 </CCol>
                 <CCol>
-                <CFormSelect
+                    <CFormSelect
                         label="Responsavel interno"
                         aria-describedby="exampleFormControlInputHelpInline"
                         text={
@@ -433,7 +435,7 @@ export default function FormAdd() {
                     </CFormSelect>
                 </CCol>
                 <CCol>
-                <CFormSelect
+                    <CFormSelect
                         label="Responsavel externo"
                         aria-describedby="exampleFormControlInputHelpInline"
                         text={
@@ -451,7 +453,7 @@ export default function FormAdd() {
                             </option>
                         ))}
                     </CFormSelect>
-                    </CCol>
+                </CCol>
             </CRow>
 
             <CRow>

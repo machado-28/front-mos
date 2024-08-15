@@ -63,7 +63,7 @@ export default function Visuaizar({ passaporte }) {
         },
         { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
       ),
-    sindicato: z
+    consulado: z
       .string()
       .regex(validatePersonNames, "incorrecto")
       .refine(
@@ -228,7 +228,7 @@ export default function Visuaizar({ passaporte }) {
       <Box pt={4}>
         {loading && <CSpinner></CSpinner>}
       </Box>
-    
+
       <SimpleCard
 
         subtitle={"DADOS PESSOAIS"}
@@ -326,15 +326,15 @@ export default function Visuaizar({ passaporte }) {
           <CCol>
             <CFormInput
               type="text"
-              label="Sindicato"
+              label="  consulado"
               aria-label=" "
               aria-describedby="exampleFormControlInputHelpInline"
               text={
-                errors.sindicato && (
-                  <div className="text-light bg-danger">{errors.sindicato.message}</div>
+                errors.consulado && (
+                  <div className="text-light bg-danger">{errors.consulado.message}</div>
                 )
               }
-              {...register("sindicato")}
+              {...register("  consulado")}
             />
           </CCol>
         </CRow>

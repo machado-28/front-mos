@@ -8,7 +8,7 @@ class Tecnico {
             console.log("PDF GERADO", resp);
         }).catch((error) => {
             console.log(error);
-            NotifyError("Erro ao Emitir PDF")
+
         })
     }
     async gerarPDFGeral(tecnicos) {
@@ -17,7 +17,7 @@ class Tecnico {
             console.log("PDF GERADO", resp);
         }).catch((error) => {
             console.log(error);
-            NotifyError("Erro ao Emitir PDF")
+            N
         })
     }
 

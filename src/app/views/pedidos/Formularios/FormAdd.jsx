@@ -46,10 +46,6 @@ import FormularioFronteira from "./FormularioFronteira";
 import FormularioTurismo from "./FormularioTurismo";
 
 export default function FormAdd() {
-
-
-
-
     const [anexos, setAnexos] = useState([]);
     const [fileSize, setFileSize] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -82,17 +78,17 @@ export default function FormAdd() {
 
             case "2":
                 return (
-                    <FormularioTrabalho></FormularioTrabalho>
+                    <FormularioTrabalho clienteId={clienteId}></FormularioTrabalho>
                 )
                 break;
             case "3":
                 return (
-                    <FormularioFronteira></FormularioFronteira>
+                    <FormularioFronteira clienteId={clienteId}></FormularioFronteira>
                 )
                 break;
             case "4":
                 return (
-                    <FormularioTurismo></FormularioTurismo>
+                    <FormularioTurismo clienteId={clienteId}></FormularioTurismo>
                 )
                 break;
 

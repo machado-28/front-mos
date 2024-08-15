@@ -505,7 +505,7 @@ export default function Listar() {
                     <ProductTable>
                         <TableHead>
                             <TableRow>
-                                <TableCell colSpan={2} sx={{ px: 3 }}>
+                                <TableCell colSpan={2} sx={{ px: 1 }}>
                                     Cód.
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
@@ -539,7 +539,7 @@ export default function Listar() {
                                         ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                         ?.map((Gestores, index) => (
                                             <TableRow key={index} hover>
-                                                <TableCell sx={{ px: 3 }} align="left" colSpan={2}>
+                                                <TableCell sx={{ px: 1 }} align="left" colSpan={2}>
                                                     <Paragraph style={{ fontSize: "0.60rem" }}>{Gestores?.numero}</Paragraph>
                                                 </TableCell>
 

@@ -5,7 +5,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { MatxLoading } from "app/components";
 import { useApi } from "app/hooks/useApi";
 import { NotifyError } from "app/utils/toastyNotification";
-
+const BASE_URL = "http:localhost:4000/"
 
 const initialState = {
   user: null,
@@ -42,7 +42,7 @@ const reducer = (state, action) => {
       window.location.reload();
       console.log("USER LOGGED", action);
       new ManageCurrentAuth().removeAuthToLocalStorage({ key: "user" })
-      
+
       return { ...state, isAuthenticated: false, user: null }
     }
 
@@ -85,8 +85,6 @@ export const AuthProvider = ({ children }) => {
       if (res?.status == 400)
         return NotifyError(res?.data?.message)
     });
-
-
   };
 
   const register = async (email, username, senha) => {
@@ -105,7 +103,7 @@ export const AuthProvider = ({ children }) => {
     (async () => {
 
       try {
-        const data = await api?.listQuery(`auth/perfil`).then((response) => {
+        const data = await api.getPerfil(`auth/perfil`).then((response) => {
           if (response?.status == 401) {
             console.log(" AUTORIZACAO", response);
 

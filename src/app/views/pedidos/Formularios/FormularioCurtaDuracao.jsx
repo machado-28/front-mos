@@ -185,6 +185,8 @@ export default function FormularioCurtaduracao({ clienteId }) {
           }
         }
         setLoading(false);
+        if (!response?.data?.message)
+          return;
         Notify(response?.data?.message);
         window.location.reload();
       });

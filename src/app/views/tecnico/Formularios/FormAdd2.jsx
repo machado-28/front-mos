@@ -31,7 +31,7 @@ import {
 } from "@coreui/react";
 import { useApi } from "app/hooks/useApi";
 import { AppButtonRoot } from "app/components/AppBuutonRoot";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { functions, min, values } from "lodash";
 import { Bounce, toast } from "react-toastify";
 import { listaPais } from "app/utils/paises";
@@ -45,6 +45,7 @@ import {
     validatePersonNames
 } from "app/utils/validate";
 import { LoadingButton } from "@mui/lab";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 export default function FormAdd() {
     const validadeDate = new ValidateData().byInterval;
@@ -60,7 +61,7 @@ export default function FormAdd() {
                 },
                 { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
             ),
-        sindicato: z
+        consulado: z
             .string()
             .regex(validatePersonNames, "incorrecto")
             .refine(
@@ -291,6 +292,8 @@ export default function FormAdd() {
                 const { data } = response
                 console.log("RESPOSTA SUCESSO", response);
                 setLoading(false);
+                if (!response?.data?.message)
+                    return;
                 Notify(response?.data?.message);
                 window.location.reload();
             });
@@ -357,9 +360,15 @@ export default function FormAdd() {
         return groups;
     };
     const styleInput = {};
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
     return (
         <CForm onSubmit={handleSubmit(PostData)} style={{ borderRadius: "none" }}>
-            <Box pt={4}></Box>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
 
             <div className="w-100 d-flex  justify-content-between">
                 <H2>Cadastro de Técnico   <Folder></Folder> </H2>

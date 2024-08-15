@@ -18,6 +18,16 @@ const gestoresRoutes = [
             <Add></Add>
         </PrivateRoutes>
     },
+    {
+        path: "/cliente/gestores/add", element: <PrivateRoutes auth={authRoles.cliente}>
+            <Add></Add>
+        </PrivateRoutes>
+    },
+    {
+        path: "/cliente/gestores", element: <PrivateRoutes auth={authRoles.cliente}>
+            <List></List>
+        </PrivateRoutes>
+    },
 
     {
         path: "/clientes/:clienteId/gestores/:gestorId/detalhar", element: <PrivateRoutes auth={authRoles.cliente}>

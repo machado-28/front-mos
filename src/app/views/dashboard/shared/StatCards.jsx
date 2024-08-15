@@ -60,15 +60,15 @@ export default function StatCards({
 }) {
   return (
     <Grid container spacing={4} sx={{ mb: "24px" }}>
-      {cardList.map(({ amount, Icon, name, path, bgColor, color }) => (
-        <Grid item xs={8} md={4} key={name}>
+      {cardList.map(({ amount, Icon, amountColor = "#fff", iconColor = "#fff", name, path, bgColor, color="white" }) => (
+        <Grid item xs={4} md={4} key={name}>
           <StyledCard style={{ maxHeight: "100", minHeight: "100" }} className={"bg-" + bgColor + " text-" + color} elevation={6}>
             <ContentBox>
-              <Icon className="icon  " style={{ color: "#fff", width: "40px", height: "50px" }} />
+              <Icon className="icon  " style={{ color: iconColor, width: "40px", height: "50px" }} />
 
               <Box ml="12px">
-                <Small className="text-white h-2">{name}</Small>
-                <Heading className="text-white">{amount}</Heading>
+                <Small className={"text-"+color+" h-2"}>{name}</Small>
+                <Heading style={{ color: amountColor }} className="text-white fs-2">{amount}</Heading>
               </Box>
             </ContentBox>
 

@@ -30,11 +30,12 @@ import {
 } from "@coreui/react";
 import { useApi } from "app/hooks/useApi";
 import { AppButtonRoot } from "app/components/AppBuutonRoot";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { functions, values } from "lodash";
 import { Bounce, toast } from "react-toastify";
 import { useState } from "react";
 import FormAdd from "./Formularios/FormAdd";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 const Title = styled("span")(() => ({
     fontSize: "1.4rem",
@@ -48,14 +49,15 @@ export default function Add() {
     console.log(render);
     const { clienteId } = useParams()
     console.log("cliente id parma", clienteId);
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
+
     return (
         <AppButtonRoot>
             <div className="example">
-                <Box pt={1}>{/* <Campaigns /> */}</Box>
                 <FormAdd></FormAdd>
             </div>
         </AppButtonRoot>
     );
 }
-
 const filter = createFilterOptions();

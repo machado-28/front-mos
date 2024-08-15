@@ -214,8 +214,8 @@ export default function Listar() {
     const buscarProcesso = async (data) => {
         setLoading(prev => true)
         const processo = new Processo();
-        const res = await processo.progresso({ statusId: 1 })
-        setProcessos(prev => res.progresso)
+        const res = await processo.buscarDelegados({ statusId: 1 })
+        setProcessos(prev => res.processos)
         setLoading(prev => false)
         console.log("PROGRESSO", res.progresso);
 
@@ -432,32 +432,7 @@ export default function Listar() {
                                     SME
                                 </option>
                             </CFormSelect>
-                            <CFormSelect {...register("statusId")} size="sm"
-                                id="validationServer05"  >
-                                <option disabled>
-                                    Status
-                                </option>
 
-                                <option value={1}>
-                                    Pendente
-                                </option>
-                                <option value={2}>
-                                    Em Andamento
-                                </option>
-                                <option value={3}>
-                                    Aprovado
-                                </option>
-                                <option value={4}>
-                                    Recusado
-                                </option>
-                                <option value={5}>
-                                    Cancelado
-                                </option>
-                                <option value={6}>
-                                    Finalizado
-                                </option>
-
-                            </CFormSelect>
                             <LoadingButton>Buscar</LoadingButton>
                         </div>
 
@@ -597,8 +572,9 @@ export default function Listar() {
                                                 </TableCell> */}
                                                 <TableCell sx={{ px: 3 }} align="left" colSpan={3}>
                                                     <Paragraph style={{ fontSize: fSize }}>
-
-                                                        {status: projecto?.step?.id }
+                                                        <CBadge color={index % 2 === 0 ? "bg-waring" : "bg-success"}>
+                                                            {projecto?.step?.nome}
+                                                        </CBadge>
                                                     </Paragraph>
                                                 </TableCell>
                                                 <TableCell sx={{ px: 3 }} align="left" colSpan={3}>

@@ -59,7 +59,7 @@ export default function FormAdd() {
                 },
                 { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
             ),
-        sindicato: z
+        consulado: z
             .string()
             .regex(validatePersonNames, "incorrecto")
             .refine(
@@ -298,6 +298,8 @@ export default function FormAdd() {
                 const { data } = response
                 console.log("RESPOSTA SUCESSO", response);
                 setLoading(false);
+                if (!response?.data?.message)
+                    return;
                 Notify(response?.data?.message);
                 window.location.reload();
             });

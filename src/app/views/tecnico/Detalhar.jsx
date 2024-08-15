@@ -7,9 +7,12 @@ import { z } from "zod";
 import { Breadcrumb, SimpleCard } from "app/components";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Tabela from "../projecto/Processos/Listar";
+import Processos from "../processo/ListarInTecnico";
 import { LoadingButton } from "@mui/lab";
 import Resumo from "./Resumo";
+import { Tecnico } from "./util";
+import { useLocation, useParams } from "react-router-dom";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 // import Step from "./components/StepProgress";
 
@@ -45,10 +48,18 @@ export default function Detalhar() {
         setLoading(prev => !prev)
         window.location.reload()
     }
+
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
+
     return (
         <>
             <>
-
+                <Box className="breadcrumb">
+                    <Breadcrumb
+                        routeSegments={routeSegments}
+                    />
+                </Box>
                 <CModal
                     alignment="center"
                     visible={visibleMapa}
@@ -173,7 +184,7 @@ export default function Detalhar() {
                 </CCol>
                 <CTabContent className="rounded-bottom">
                     <CTabPane data="trabalho" className="preview" visible={render === 0 ? true : false}>
-                       <Resumo></Resumo>
+                        <Resumo></Resumo>
                     </CTabPane>
                     <CTabPane data="turismo" className="preview" visible={render === 1 ? true : false}>
                         <Box pt={4}></Box>
@@ -200,7 +211,7 @@ export default function Detalhar() {
 
                     <CTabPane className="preview border-1" visible={render === 6 ? true : false}>
                         <Box pt={2}></Box>
-                        <Tabela></Tabela>
+                        <Processos></Processos>
                     </CTabPane>
                 </CTabContent>
             </div>

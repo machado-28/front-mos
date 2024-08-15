@@ -10,11 +10,12 @@ import { Email, FolderCopySharp, Phone } from "@mui/icons-material";
 
 import { useApi } from "app/hooks/useApi";
 import { AppButtonRoot } from "app/components/AppBuutonRoot";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { functions, values } from "lodash";
 import { Bounce, toast } from "react-toastify";
 import { useState } from "react";
 import FormAdd from "./Formularios/FormAdd";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 const Title = styled("span")(() => ({
     fontSize: "1.4rem",
@@ -24,16 +25,15 @@ const Title = styled("span")(() => ({
 
 export default function Add() {
     const [render, setRender] = useState(0);
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
+
 
     console.log(render);
     return (
         <AppButtonRoot>
             <div className="example">
-
-
-
                 <Box pt={1}>{/* <Campaigns /> */} </Box>
-
                 <FormAdd></FormAdd>
             </div>
         </AppButtonRoot>

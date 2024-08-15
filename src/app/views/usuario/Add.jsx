@@ -1,4 +1,4 @@
-import { Box, styled } from "@mui/material";
+import { Box, Breadcrumbs, styled } from "@mui/material";
 import { Breadcrumb, SimpleCard } from "app/components";
 import React from "react";
 import { H1, H3, Paragraph } from "app/components/Typography";
@@ -30,11 +30,12 @@ import {
 } from "@coreui/react";
 import { useApi } from "app/hooks/useApi";
 import { AppButtonRoot } from "app/components/AppBuutonRoot";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { functions, values } from "lodash";
 import { Bounce, toast } from "react-toastify";
 import { useState } from "react";
 import FormAdd from "./Formularios/FormAdd";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 const Title = styled("span")(() => ({
     fontSize: "1.4rem",
@@ -44,10 +45,17 @@ const Title = styled("span")(() => ({
 
 export default function Add() {
     const [render, setRender] = useState(0);
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
 
     console.log(render);
     return (
         <AppButtonRoot>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
             <div className="example">
 
 

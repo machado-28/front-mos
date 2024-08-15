@@ -18,13 +18,6 @@ export const AdminNavigations = [
         path: "clientes/add",
         icon: "add",
       },
-      // {
-      //   name: "pendentes",
-      //   path: "/clientes/pendentes",
-      //   icon: "pending",
-      // },
-
-
 
     ]
   },
@@ -43,15 +36,15 @@ export const AdminNavigations = [
         path: "/projectos/list",
         icon: "list"
       },
-      {
-        name: "Relatorio (PDF)",
-        path: "/projectos/relatorio",
-        icon: "list"
-      }
+      // {
+      //   name: "Relatorio (PDF)",
+      //   path: "/projectos/relatorio",
+      //   icon: "list"
+      // }
     ]
   },
   {
-    name: "Técnicos",
+    name: "Beneficiarios",
     icon: "people",
     children: [
 
@@ -62,26 +55,74 @@ export const AdminNavigations = [
       }
     ]
   },
+  { label: "GESTÃO DE PROCESSOS", type: "label" },
   {
-    name: "Processos",
+    name: "Processos ",
     icon: "folderShared",
-
     children: [
 
       {
-        name: "listar",
+        name: "ver processos",
         path: "/processos/list",
         icon: "list"
       },
-      {
-        name: "Pendentes",
-        path: "/processos/pendentes",
-        icon: "list"
-      },
-
 
     ]
   },
+  {
+    name: "Processos delegados",
+    icon: "task",
+    children: [
+      {
+        name: "listar",
+        path: "/processos/delegados",
+        icon: "list"
+      },
+      {
+        name: "Em Andamento",
+        path: "/processos/delegados/andamento",
+        icon: "progress"
+      },
+      {
+        name: "Pendentes",
+        path: "/processos/delegados/pendentes",
+        icon: "list"
+      },
+      {
+        name: "Finalizados",
+        path: "/processos/delegados/finalizados",
+        icon: "check"
+      },
+
+      // {
+      //   name: "Cancelados",
+      //   path: "/processos/delegados/cancelados",
+      //   icon: "list"
+      // },
+    ]
+
+
+
+  },
+  { label: "GESTÃO DE VISTO", type: "label" },
+  {
+    name: "Controlo de Visto",
+    icon: "folderShared",
+
+    children: [
+      {
+        name: "Vistos Expirados",
+        path: "/vistos/query?activo=false",
+        icon: "list"
+      },
+      {
+        name: "Vistos Activos",
+        path: "/vistos/query?activo=true",
+        icon: "check"
+      },
+    ]
+  },
+
   // { label: "Pedidos", type: "label" },
   // {
   //   name: "Solicitações",
@@ -194,217 +235,60 @@ export const AdminNavigations = [
     ],
   },
   {
-    name: "Visto",
+    name: "Personalização",
     icon: "topic",
     children: [
-      {
-        name: "Tipo",
-        children: [
-          {
-            name: "ADICIONAR",
-            path: "/vistos/tipo/add"
-          },
-          {
-            name: "LISTAR",
-            path: "/vistos/tipo/list"
-          }
-        ]
 
+      {
+        name: "visto",
+        path: "/vistos/tipo"
       },
 
+      {
+        name: "status de processos",
+        path: "/vistos/status"
+      },
     ]
   },
-  {
-    name: "Delegação de tarefa",
-    icon: "topic",
-    children: [
-      {
-        name: "fazes",
-        children: [
-          {
-            name: "adicionar",
-            path: "/fazes/add"
-          },
-          {
-            name: "listar",
-            path: "/fazes/tipo/list"
-          }
-        ]
+  // {
+  //   name: "Delegação de tarefa",
+  //   icon: "topic",
+  //   children: [
+  //     {
+  //       name: "delegar",
+  //       path: "/processos/delegar"
+  //     },
+  //     {
+  //       name: "fazes",
+  //       children: [
 
-      },
-      {
-        name: "status",
-        children: [
-          {
-            name: "adicionar",
-            path: "-fazes/status/add"
-          },
-          {
-            name: "listar",
-            path: "/fazes/status/list"
-          }
-        ]
+  //         {
+  //           name: "listar",
+  //           path: "/fazes/tipo/list"
+  //         }
+  //       ]
+  // 
+  //     },
+  //     {
+  //       name: "status",
+  //       children: [
+  //         {
+  //           name: "adicionar",
+  //           path: "-fazes/status/add"
+  //         },
+  //         {
+  //           name: "listar",
+  //           path: "/fazes/status/list"
+  //         }
+  //       ]
 
-      },
+  //     },
 
-    ]
-  }
+  //   ]
+  // }
 ];
 
-export const AdminProjectoNavigations = [
-  { name: "Admin de Projecto Dashboard", path: "/dashboard/default", icon: "assessment" },
-  // { label: "GESTÃO DE VISTO", type: "label" },
-  { label: "gerenciamento geral", type: "label" },
-  {
-    name: "Clientes",
-    icon: "contacts",
-    path: "/clientes",
-    children: [
-      {
-        name: "Listar",
-        icon: "receiptLong",
-        path: "/clientes/list"
-      },
-
-      {
-        name: "novo",
-        path: "clientes/add",
-        icon: "add",
-      },
-      {
-        name: "pendentes",
-        path: "/clientes/pendentes",
-        icon: "pending",
-      },
-
-
-
-    ]
-  },
-
-  {
-    name: "Projectos",
-    icon: "workHistory",
-    children: [
-      {
-        name: "novo",
-        path: "/projectos/add",
-        icon: "add"
-      },
-      {
-        name: "Listar",
-        path: "/projectos/list",
-        icon: "list"
-      }
-    ]
-  },
-  {
-    name: "Técnicos",
-    icon: "people",
-    children: [
-      {
-        name: "Novos",
-        path: "/tecnicos/add",
-        icon: "add"
-      },
-      {
-        name: "Listar",
-        icon: "list",
-        path: "tecnicos/list"
-      }
-    ]
-  },
-  {
-    name: "Processos",
-    icon: "folderShared",
-
-    children: [
-
-      {
-        name: "listar",
-        path: "/processos/list",
-        icon: "list"
-      },
-
-      {
-        name: "em atraso",
-        path: "/processos/list",
-        icon: "clock"
-      },
-
-    ]
-  },
-
-  { label: "configurações & privacidade ", type: "label" },
-  {
-    name: "registo de actividade",
-    icon: "groupAdd",
-    path: "/usuarios/list",
-    children: [
-
-      {
-        name: "logs",
-        path: "/logs"
-      },
-    ],
-  },
-  {
-    name: "Visto",
-    icon: "topic",
-    children: [
-      {
-        name: "Tipo",
-        children: [
-          {
-            name: "ADICIONAR",
-            path: "/vistos/tipo/add"
-          },
-          {
-            name: "LISTAR",
-            path: "/vistos/tipo/list"
-          }
-        ]
-
-      },
-
-    ]
-  },
-  {
-    name: "Fazes de processos",
-    icon: "topic",
-    children: [
-      {
-        name: "fazes",
-        children: [
-          {
-            name: "adicionar",
-            path: "/fazes/add"
-          },
-          {
-            name: "listar",
-            path: "/fazes/tipo/list"
-          }
-        ]
-
-      },
-      {
-        name: "status",
-        children: [
-          {
-            name: "adicionar",
-            path: "-fazes/status/add"
-          },
-          {
-            name: "listar",
-            path: "/fazes/status/list"
-          }
-        ]
-
-      },
-
-    ]
-  }
-];
+export const AdminProjectoNavigations = AdminNavigations
 
 
 export const VisualizadorNavigations = [
@@ -497,7 +381,23 @@ export const ClienteNavigations = [
   { name: "Dashboard-cliente", path: "/dashboard/default", icon: "assessment" },
   // { label: "GESTÃO DE VISTO", type: "label" },
   { label: "gerenciamento geral", type: "label" },
+  {
+    name: "Gestão de Gestores",
+    icon: "people",
+    children: [
+      {
+        name: "ver gestores",
+        icon: "list",
+        path: "/cliente/gestores"
+      },
+      {
+        name: "Adicionar novo",
+        icon: "list",
+        path: "/cliente/gestores/add"
+      },
 
+    ]
+  },
   {
     name: "Meus Projectos",
     icon: "workHistory",
@@ -510,6 +410,7 @@ export const ClienteNavigations = [
       }
     ]
   },
+
   {
     name: "Técnicos",
     icon: "people",
@@ -528,19 +429,18 @@ export const ClienteNavigations = [
     children: [
       {
         name: "ver processos",
-        path: "/processos/list",
+        path: "/cliente/processos/list",
+
         icon: "list"
       },
+
       {
-        name: "em atraso",
-        path: "/processos/list",
-        icon: "clock"
+        name: "Finalizados",
+        path: "/processos/delegados/finalizados",
+        icon: "check"
       },
-      {
-        name: "ver finalizados",
-        path: "/processos/list",
-        icon: "clock"
-      },
+
+
 
     ]
   },
@@ -549,24 +449,22 @@ export const ClienteNavigations = [
     icon: "topic",
     children: [
       {
-        name: "Tipo",
-        children: [
-
-          {
-            name: "listar",
-            path: "/vistos/tipo/list"
-          }
-        ]
-
+        name: "Vistos Expirados",
+        path: "/vistos/query?activo=false",
+        icon: "stop"
       },
-
+      {
+        name: "Vistos Activos",
+        path: "/vistos/query?activo=true",
+        icon: "check"
+      },
     ]
   },
 
 ];
 
 export const GestorProjectoNavigations = [
-  { name: "Admin de Projecto Dashboard", path: "/dashboard/default", icon: "assessment" },
+  { name: "Dashboard", path: "/dashboard/default", icon: "assessment" },
   // { label: "GESTÃO DE VISTO", type: "label" },
   { label: "Meus Projectos", type: "label" },
   {
@@ -579,11 +477,66 @@ export const GestorProjectoNavigations = [
         icon: "list"
       }
     ]
+  }, { label: "GESTÃO DE PROCESSOS", type: "label" },
+  {
+    name: "Processos ",
+    icon: "folderShared",
+    children: [
+
+      {
+        name: "ver processos",
+        path: "/processos/list",
+        icon: "list"
+      },
+
+    ]
+  },
+  {
+    name: "Processos delegados",
+    icon: "task",
+    children: [
+      {
+        name: "listar",
+        path: "/processos/delegados",
+        icon: "list"
+      },
+      {
+        name: "Em Andamento",
+        path: "/processos/delegados/andamento",
+        icon: "progress"
+      },
+      {
+        name: "Pendentes",
+        path: "/processos/delegados/pendentes",
+        icon: "list"
+      },
+      {
+        name: "Finalizados",
+        path: "/processos/delegados/finalizados",
+        icon: "check"
+      }]
+  },
+
+  {
+    name: "Visto",
+    icon: "topic",
+    children: [
+      {
+        name: "Vistos Expirados",
+        path: "/vistos/query?activo=false",
+        icon: "stop"
+      },
+      {
+        name: "Vistos Activos",
+        path: "/vistos/query?activo=true",
+        icon: "check"
+      },
+    ]
   },
 ];
 
 
-export const GestorProjectoExternoNavigations = [
+export const GestorProjectoClienteNavigations = [
   { name: "Dashboard", path: "/dashboard/default", icon: "assessment" },
   // { label: "GESTÃO DE VISTO", type: "label" },
   { label: "Meus Projectos", type: "label" },
@@ -592,19 +545,38 @@ export const GestorProjectoExternoNavigations = [
     icon: "workHistory",
     children: [
       {
-        name: "Lver projectos",
+        name: "Ver projectos",
         path: "/projectos/list",
         icon: "list"
       }
     ]
   },
+
+  { label: "Vistos Emitidos", type: "label" },
+  {
+    name: "Vistos",
+    icon: "folderShared",
+
+    children: [
+      {
+        name: "Vistos Expirados",
+        path: "/vistos/query?activo=false",
+        icon: "list"
+      },
+      {
+        name: "Vistos Activos",
+        path: "/vistos/query?activo=true",
+        icon: "check"
+      },
+    ]
+  }
 ];
 
 
 export const TecnicoProcessoNavigations = [
   { name: "Dashboard", path: "/dashboard/default", icon: "assessment" },
   // { label: "GESTÃO DE VISTO", type: "label" },
-  { label: "gerenciamento geral", type: "label" },
+  { label: "gerenciamento de clientes", type: "label" },
   {
     name: "Clientes",
     icon: "contacts",
@@ -618,98 +590,51 @@ export const TecnicoProcessoNavigations = [
     ]
   },
 
-  {
-    name: "Projectos",
-    icon: "workHistory",
-    children: [
-      {
-        name: "Todos projectos",
-        path: "/projectos/list",
-        icon: "list"
-      },
-    ]
-  },
-  {
-    name: "Técnicos/beneficiarios",
-    icon: "people",
-    children: [
-      {
-        name: "registar um",
-        path: "/tecnicos/add",
-        icon: "add"
-      },
-      {
-        name: "ver beneficiários ",
-        icon: "list",
-        path: "tecnicos/list"
-      }
-    ]
-  },
-  {
-    name: "Processos",
-    icon: "folderShared",
+  { label: "CONTROLO DE PROCESSOS DE VISTOS ", type: "label" },
 
-    children: [
-      {
-        name: "adicionar",
-        path: "/fazes/add"
-      },
-      {
-        name: "ver processos",
-        path: "/processos/list",
-        icon: "list"
-      },
-
-
-      {
-        name: "em atraso",
-        path: "/processos/list",
-        icon: "clock"
-      },
-
-    ]
-  },
   {
     name: "Meus Processos",
-    icon: "folderShared",
-
+    icon: "task",
     children: [
       {
-        name: "Em andamento",
-        path: "/processos/list",
+        name: "listar",
+        path: "/processos/delegados",
         icon: "list"
       },
-
+      {
+        name: "Em Andamento",
+        path: "/processos/delegados/andamento",
+        icon: "progress"
+      },
+      {
+        name: "Pendentes",
+        path: "/processos/delegados/pendentes",
+        icon: "list"
+      },
       {
         name: "Finalizados",
-        path: "/processos/list",
-        icon: "list"
+        path: "/processos/delegados/finalizados",
+        icon: "check"
       },
 
-
-      {
-        name: "Em atraso",
-        path: "/processos/list",
-        icon: "clock"
-      },
-
-    ]
+    ],
   },
+  { label: "GESTÃO DE VISTO", type: "label" },
   {
-    name: "Visto",
+    name: "Controlo de Visto",
     icon: "folderShared",
 
     children: [
       {
-        name: "registar",
-        path: "/fazes/add"
-      },
-      {
-        name: "ver vistos",
-        path: "/processos/list",
+        name: "Vistos Expirados",
+        path: "/vistos/query?activo=false",
         icon: "list"
       },
-
+      {
+        name: "Vistos Activos",
+        path: "/vistos/query?activo=true",
+        icon: "check"
+      },
     ]
   },
 ];
@@ -808,74 +733,134 @@ export const SecretariaNavigations = [
 ];
 
 export const RhNavigations = [
-  { name: "RECURSOS HUMANOS", path: "/dashboard/default", icon: "dashboard" },
-  { label: "GESTÃO DE VISTO", type: "label" },
+  { name: "dashboard", path: "/dashboard/default", icon: "dashboard" },
+  { label: "GESTÃO DE FUNCIONÁRIOS", type: "label" },
 
   {
-    name: "Processos ",
-    icon: "folder",
+    name: "Funcionários",
+    icon: "person",
 
     children: [
       {
-        name: "Lista de Processos",
+        name: "Lista de Funcionários",
+        path: "/funcionarios"
+      },
+      {
+        name: "Adicionar Novo Funcionário",
+        path: "/funcionarios/add"
+      },
+
+    ]
+  },
+
+  {
+    name: "Departamentos",
+    icon: "ballot",
+
+    children: [
+      {
+        name: "Lista de Departamentos",
         path: "/processos/list"
       },
-      { label: "GESTÃO DE RCUROS HUMANOS", type: "label" },
       {
-        name: "FUNCIONARIOS",
-        icon: "security",
-        children: [
-          { name: "Cadastramento", iconText: "SI", path: "/funcionario/add" },
-          { name: "Listagem", iconText: "SI", path: "/funcionario/list" }
-        ]
+        name: "Adicionar Novo Departamento",
+        path: "/processos/list"
       },
-      {
-        name: "TIPO DE DOCUMENTO ",
-        icon: "security",
-        children: [
-          { name: "Adicionar", iconText: "SI", path: "/documento/tipo/funcionario/add" },
-          { name: "Listar", iconText: "SI", path: "/documento/tipo/funcionario/add" }
-        ]
-      },
-      {
-        name: "FALTA & ATRASO",
-        icon: "security",
-        children: [
-          { name: "Cadastramento", iconText: "SI", path: "/funcionario/add" },
-          { name: "Listagem", iconText: "SI", path: "/funcionario/add" }
-        ]
-      },
-      {
-        name: "CONTRATOS",
-        icon: "security",
-        children: [{ name: "Listagem", iconText: "SI", path: "/funcionario/add" }]
-      },
-      { label: "GESTÃO FINACEIRA", type: "label" },
-      {
-        name: "FOLHA DE SALÁRIO",
-        icon: "security",
-        children: [
-          { name: "Visualizar", iconText: "SI", path: "/pagamentos/list" },
-          { name: "Gráfico ", iconText: "SI", path: "/funcionario/grafico" }
-        ]
-      },
-      { label: "GESTÃO ADMINISTRATIVA", type: "label" },
-      {
-        name: "DEPARTAMENTOS",
-        icon: "security",
-        children: [
-          { name: "Cadastramento", iconText: "SI", path: "/departamento/add" },
-          { name: "Listagem", iconText: "SI", path: "/departamento/list" }
-        ]
-      },
-      {
-        name: "CARGOS",
-        icon: "security",
-        children: [
-          { name: "Cadastramento", iconText: "SI", path: "/departamento/cargo/add" },
-          { name: "Listagem", iconText: "SI", path: "/departamento/cargo/list" }
-        ]
-      }
+
     ]
-  }
+  },
+
+  {
+    name: "Cargos",
+    icon: "businessCenter",
+
+    children: [
+      {
+        name: "Lista de Cargos",
+        path: "/processos/list"
+      },
+      {
+        name: "Adicionar Novo Cargo",
+        path: "/processos/list"
+      },
+
+    ]
+  },
+  {
+    name: "Horários e Turnos",
+    icon: "alarm",
+
+    children: [
+      {
+        name: "Lista de Turnos",
+        path: "/processos/list"
+      },
+      {
+        name: "Adicionar Novo Turno",
+        path: "/processos/list"
+      },
+
+    ]
+  },
+  { label: "Folha de Pagamento", type: "label" },
+  {
+    name: "Processamento",
+    icon: "money",
+    children: [
+      {
+        name: "processar folha",
+        path: "/processos/list"
+      },
+      {
+        name: "Histórico de Pagamentos",
+        path: "/processos/list"
+      },
+
+    ]
+  },
+  { label: "Gestão de Vagas", type: "label" },
+  {
+    name: "Recrutamento",
+    icon: "work",
+
+    children: [
+      {
+        name: "Vagas Abertas",
+        path: "/processos/list"
+      },
+      {
+        name: "Processos Seletivos",
+        path: "/processos/list"
+      },
+      {
+        name: "Candidatos",
+        path: "/processos/list"
+      },
+      {
+        name: "Entrevistas",
+        path: "/processos/list"
+      },
+    ]
+  },
+  { label: "Relatório e análise", type: "label" },
+  {
+    name: "Relatórios",
+    icon: "analyticsOutlined",
+
+    children: [
+      {
+        name: "Relatórios de Funcionários",
+        path: "/processos/list"
+      },
+      {
+        name: "Rel. de Folha de Pagamento",
+        path: "/processos/list"
+      },
+      {
+        name: "Relatórios de Desempenho",
+        path: "/processos/list"
+      },
+
+    ]
+  },
 ];

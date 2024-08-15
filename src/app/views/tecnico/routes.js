@@ -7,25 +7,30 @@ import Loadable from "app/components/Loadable";
 const Add = Loadable(lazy(() => import("./Add")));
 const AddParaCliente = Loadable(lazy(() => import("./AddPersonalizado")));
 // const Edit = Loadable(lazy(() => import("./Editar")));
-const Detalhar = Loadable(lazy(() => import("./Detalhar")));
+const Processos = Loadable(lazy(() => import("./../processo/ListarInTecnico")));
 const Editar = Loadable(lazy(() => import("./Formularios/editar/FormEditar")));
 const List = Loadable(lazy(() => import("./Listar")));
 const ListPersonalizado = Loadable(lazy(() => import("./ListarPersonalizado")));
 
 
 const tecnicoRoutes = [
-   
+
     { path: "/tecnicos/:tecnicoId/editar", element: <PrivateRoutes auth={authRoles.gestorCliente}> <Editar /></PrivateRoutes> },
     { path: "/tecnicos/add/cliente/:clienteId/", element: <PrivateRoutes auth={authRoles.gestorCliente}> <Add /></PrivateRoutes> },
 
     {
-        path: "/tecnicos/:tecnicoId/detalhar", element: <PrivateRoutes auth={authRoles.gestorCliente}>
-          <Detalhar/>
+        path: "/cliente/:clienteId/tecnicos/:tecnicoId/processos", element: <PrivateRoutes auth={authRoles.gestorCliente}>
+            <Processos />
         </PrivateRoutes>
     },
     {
         path: "/tecnicos/list/admin", element: <PrivateRoutes auth={authRoles.gestorCliente}>
             <ListPersonalizado />
+        </PrivateRoutes>
+    },
+    {
+        path: "/tecnicos/list", element: <PrivateRoutes auth={authRoles.gestorCliente}>
+            <List />
         </PrivateRoutes>
     },
 

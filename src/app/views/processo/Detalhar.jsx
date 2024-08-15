@@ -1,7 +1,7 @@
 import { Edit, FileDownloadDone, Print, Title } from "@mui/icons-material";
-import { Avatar, Box, Button, Card } from "@mui/material";
+import { Avatar, Box, Breadcrumbs, Button, Card } from "@mui/material";
 import { H1 } from "app/components/Typography";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import FormularioVisualizarDadosMigratorio from "./Formularios/visualisar/FormularioVisualizarDadosMigratorio";
 import FormularioVisualizarContacto from "./Formularios/visualisar/FormularioVisualizarContactos";
 import FormularioVisualizarDadosProFissionais from "./Formularios/visualisar/FormularioVisualizarDadosProFissionais";
@@ -14,10 +14,11 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Processo from "./util";
 import Resumo from "./Resumo";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 // import Step from "./components/StepProgress";
 
 const { CNav, CNavItem, CNavLink, CTabContent, CTabPane, CImage, CAvatar, CCard, CCardBody, CRow, CCol, CDropdownToggle, CDropdown, CDropdownItem, CDropdownMenu, CDropdownDivider, CModal, CModalHeader, CModalTitle, CForm, CFormSelect, CButton, CModalFooter, CSpinner, CModalBody, CFormInput, CFormTextarea } = require("@coreui/react");
-const { SimpleCard } = require("app/components");
+const { SimpleCard, Breadcrumb } = require("app/components");
 const { useState, useEffect } = require("react");
 export default function Detalhar() {
     const [render, setRender] = useState(0);
@@ -51,7 +52,20 @@ export default function Detalhar() {
 
     }
     const [loadingMap, setLoadingMap] = useState(false);
+    const [status, setStatus] = useState([{ nome: "pendente" }, { nome: "em andamento" }, { nome: "concluido" }, { nome: "recusado" }, { nome: "cancelado" }]);
+    const [fases, setFases] = useState([{ nome: "tradução" }, { nome: "legalização", }, { nome: "sme" }, { nome: "mirempet" }, { nome: "devolvidos" }]);
 
+    async function buscarStatusEfases() {
+        const statatusClass = new Status();
+        const faseClass = new Fase();
+
+        const status = await statatusClass.buscar().then((res) => res?.data)
+        setStatus(prev => status);
+
+        const fases = await faseClass.buscar().then((res) => res?.data)
+        setStatus(prev => fases);
+
+    }
     async function gerarFicha() {
         setLoadingMap(prev => true)
         const processo = new Processo();
@@ -66,18 +80,21 @@ export default function Detalhar() {
         setLoading(prev => true)
         const processo = new Processo();
         const res = await processo.buscar({ processoId })
-        setProcessos(prev => res.progresso[0])
+        setProcessos(prev => res.processos[0])
         setLoading(prev => false)
-        console.log("PROCESSOOOOOOOOOOOOOOO", res.progresso[0], processoId);
+
     }
     useEffect(() => {
         buscarProcesso()
     }, [])
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
+
+
     const [pendente, traducao, mirex, sme, mirempet, finalizados] = [1, 2, 3, 4, 5, 6]
     return (
         <>
             <>
-
                 <CModal
                     alignment="center"
                     visible={visibleMapa}
@@ -126,13 +143,13 @@ export default function Detalhar() {
                                             Aprovado
                                         </option>
                                         <option value={4}>
-                                            Recusado
+                                            concluido
                                         </option>
                                         <option value={5}>
-                                            Cancelado
+                                            Recusado
                                         </option>
                                         <option value={6}>
-                                            Finalizado
+                                            Cancelado
                                         </option>
                                     </CFormSelect>
                                 </CCol>
@@ -164,18 +181,21 @@ export default function Detalhar() {
 
                 </CModal>
             </>
-            <CCard >
+            <CCard className="m" >
+
                 <CCardBody className=" d-flex align-items-start justify-content-between">
 
                     <div className="p-4 w-100">
-                        <div className="w-100 d-flex align-items-start justify-content-between">
-                            <H1>
-
-                            </H1>
+                        <div className="w-100 mb-3 d-flex align-items-start justify-content-between">
+                            <Box className="breadcrumb">
+                                <Breadcrumb
+                                    routeSegments={routeSegments}
+                                />
+                            </Box>
                             <div>
-                                <Link>
+                                {/* <Link>
                                     <Button>   <Edit></Edit></Button>
-                                </Link>
+                                </Link> */}
                                 {
                                     loadingMap === true ? <CSpinner></CSpinner> : <Link onClick={async () => { gerarFicha() }}>
                                         <Button>   <Print>Ficha</Print></Button>
@@ -209,14 +229,7 @@ export default function Detalhar() {
                                         </CDropdown>
                                     ))} */}
                                 </>
-                                <>
-                                    <Button className="bg-success text-white" onClick={() => {
-                                        setVisibleMapa((prev) => true
-                                        )
-                                    }}>
-                                        Editar status <Edit></Edit>
-                                    </Button>
-                                </>
+                                ^
                             </div>
                         </div>
                         <FormularioVisualizarDadosPessoais processo={processos}></FormularioVisualizarDadosPessoais>

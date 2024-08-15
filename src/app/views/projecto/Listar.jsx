@@ -1,4 +1,5 @@
 import {
+    CAlert,
     CBadge,
     CButton,
     CCol,
@@ -45,10 +46,10 @@ import {
     styled,
     useTheme
 } from "@mui/material";
-import { Paragraph } from "app/components/Typography";
+import { H2, Paragraph } from "app/components/Typography";
 import { useApi } from "app/hooks/useApi";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import "./style.css";
 // import { ChartLine } from "./ChartLine";
 import { NotifyError } from "app/utils/toastyNotification";
@@ -62,6 +63,8 @@ import { useForm } from "react-hook-form";
 import Add from "@mui/icons-material/Add";
 import useAuth from "app/hooks/useAuth";
 import { ClockIcon } from "@mui/x-date-pickers";
+import { Breadcrumb } from "app/components";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 
 // STYLED COMPONENTS
@@ -178,12 +181,14 @@ export default function Listar() {
     let { clienteId } = useParams();
     const { user } = useAuth();
     const { gestorId } = useParams();
+    let URL_ADD = `/projectos/add`
     let gestorInternoId = undefined;
     let gestorExternoId = undefined;
 
     if (user.clienteId) {
         clienteId = user?.clienteId
         gestorExternoId = gestorId;
+        URL_ADD = `/clientes/${clienteId}/projectos/add`
     }
     else {
         gestorInternoId = gestorId;
@@ -217,33 +222,38 @@ export default function Listar() {
         buscarProjectos()
     }, [order, orderBy, clienteId, date])
     const styleDropdown = {};
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
 
     return (
         <AppButtonRoot>
-            <div className="w-100 d-flex  justify-content-between">
-                <strong>Lista de Projectos  ({projectos?.length})  <Person></Person></strong>
-                <section className="d-flex">
-                    <Link
-                        onClick={() => {
-                            setVisibleMapa(prev => true)
-                        }}
-                    >
-                        <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="contained" color="success">
-                            Mapa <Print></Print>
-                        </StyledButton>
-                    </Link>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
+            <CAlert color="secondary">
+                <div className="w-100 d-flex  justify-content-between">
+                    <H2>Lista de Projectos  ({projectos?.length})  <Person></Person></H2>
+                    <section className="d-flex">
+                        <Link
+                            onClick={() => {
+                                setVisibleMapa(prev => true)
+                            }}
+                        >
+                            <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="contained" color="success">
+                                Mapa <Print></Print>
+                            </StyledButton>
+                        </Link>
 
-                    <Link to={`/clientes/${clienteId}/projectos/add`}>
-                        <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
-                            Criar Novo <Add></Add>
-                        </StyledButton>
-                    </Link>
-
-
-                </section>
-
-            </div>
-
+                        <Link to={URL_ADD}>
+                            <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
+                                Criar Novo <Add></Add>
+                            </StyledButton>
+                        </Link>
+                    </section>
+                </div>
+            </CAlert>
             <Box pt={4}>{/* <Campaigns /> */}</Box>
 
             <Card elevation={3} sx={{ pt: "10px", mb: 3 }}>
@@ -428,7 +438,7 @@ export default function Listar() {
                                                         sx={0}
                                                     >
                                                         <option>selecione</option>
-                                                        <option value={1}>visualisar</option>
+                                                        <option value={1}>ver processos</option>
                                                         <option value={2}>Editar</option>
                                                     </CFormSelect>
                                                 </TableCell>

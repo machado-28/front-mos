@@ -1,6 +1,9 @@
 import { createContext, useEffect, useReducer } from "react";
 import axios from "axios";
 import shortId from "shortid";
+import { listenMessage } from "app/hooks/socket";
+import { api } from "app/hooks/useApi";
+import { io } from "socket.io-client";
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -29,36 +32,6 @@ const NotificationContext = createContext({
   createNotification: () => { }
 });
 
-const list = [
-  {
-    id: shortId.generate(),
-    heading: "Message",
-    icon: { name: "chat", color: "primary" },
-    timestamp: 1570702802573,
-    title: "New message from Devid",
-    subtitle: "Hello, Any progress...",
-    path: "chat"
-  },
-  {
-    id: shortId.generate(),
-    heading: "Alert",
-    icon: { name: "notifications", color: "error" },
-    timestamp: 1570702702573,
-    title: "Server overloaded",
-    subtitle: "Traffice reached 2M",
-    path: "page-layouts/user-profile"
-  },
-  {
-    id: shortId.generate(),
-    heading: "Message",
-    icon: { name: "chat", color: "primary" },
-    timestamp: 1570502502573,
-    title: "New message from Goustove",
-    subtitle: "Hello, send me details",
-    path: "chat"
-  }
-]
-
 export const NotificationProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, []);
 
@@ -82,7 +55,10 @@ export const NotificationProvider = ({ children }) => {
 
   const getNotifications = async () => {
     try {
-      const res = await axios.get("/api/notification");
+      const socket = io("http://localhost:4000"); // Ajuste a URL conforme necessário
+      const res = await api.get("/v1/notification");
+      const data = listenMessage({ event: "CREATE_PROJECT" })
+
       dispatch({ type: "LOAD_NOTIFICATIONS", payload: res.data });
     } catch (e) {
       console.error(e);
@@ -91,10 +67,12 @@ export const NotificationProvider = ({ children }) => {
 
   const createNotification = async (notification) => {
     try {
+
       const res = await axios.post("/api/notification/add", { notification });
+      console.log("CRIANDO NOTI", res);
       dispatch({ type: "CREATE_NOTIFICATION", payload: res.data });
     } catch (e) {
-      console.error(e);
+      console.error("ERRO NOTIFICATION", e);
     }
   };
 

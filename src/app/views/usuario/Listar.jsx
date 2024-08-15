@@ -21,6 +21,7 @@ import {
     Download,
     FolderCopySharp,
     Person,
+    PersonAdd,
     PlusOne,
     Search,
     TroubleshootOutlined
@@ -43,7 +44,7 @@ import {
 import { Paragraph } from "app/components/Typography";
 import { useApi } from "app/hooks/useApi";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import "./style.css";
 // import { ChartLine } from "./ChartLine";
 import { NotifyError } from "app/utils/toastyNotification";
@@ -56,6 +57,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Add from "@mui/icons-material/Add";
 import useAuth from "app/hooks/useAuth";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
+import { Breadcrumb } from "app/components";
 
 
 
@@ -197,10 +200,18 @@ export default function Listar() {
 
     useEffect(() => {
         buscarusuario()
-    }, [order, orderBy, date, searchTerm])
+    }, [order, orderBy, date, searchTerm, loading])
     const styleDropdown = {};
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
+
     return (
         <AppButtonRoot>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
             <div className="w-100 d-flex  justify-content-between">
                 <strong>Lista de usuarios ({usuarios?.length})  <Person></Person></strong>
                 <div>
@@ -212,9 +223,9 @@ export default function Listar() {
 
                     </Link>
 
-                    <Link to={`/usuario/add`}>
-                        <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
-                            Criar Novo <Add></Add>
+                    <Link to={`/usuarios/add`}>
+                        <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="contained" color="success">
+                            Criar Novo <PersonAdd></PersonAdd>
                         </StyledButton>
                     </Link>
                 </div>
@@ -283,8 +294,8 @@ export default function Listar() {
                     <ProductTable>
                         <TableHead>
                             <TableRow>
-                                <TableCell colSpan={2} sx={{ px: 3 }}>
-                                    Cód.
+                                <TableCell colSpan={1} sx={{ px: 2 }}>
+                                    ID.
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
                                     Nome
@@ -320,10 +331,12 @@ export default function Listar() {
                                         ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                         ?.map((user, index) => (
                                             <TableRow key={index} hover>
-                                                <TableCell sx={{ px: 3 }} align="left" colSpan={2}>
-
-                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{user?.id}</Paragraph>
+                                                <TableCell sx={{ px: 2 }} align="left" colSpan={1}>
+                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{index + 1}</Paragraph>
                                                 </TableCell>
+                                                {/* <TableCell sx={{ px: 3 }} align="left" colSpan={2}>
+                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{user?.id}</Paragraph>
+                                                </TableCell> */}
 
                                                 <TableCell
                                                     colSpan={3}
@@ -372,21 +385,20 @@ export default function Listar() {
                                                         onChange={async (e) => {
                                                             if (e.target.value == 1) {
                                                                 return goto(
-                                                                    `/usuario/${user?.id}/detalhar`
+                                                                    `/usuarios/${user?.id}/detalhar`
                                                                 );
                                                             }
                                                             if (e.target.value == 2) {
                                                                 return goto(
-                                                                    `/usuario/${user?.id}editar/`
+                                                                    `/usuarios/${user?.id}/editar/`
                                                                 );
                                                             }
 
                                                             if (e.target.value == 3) {
                                                                 console.log("SOLICI ID", user?.id);
-                                                                setPedido(prev => user?.id);
-                                                                setUpdateStatusId(prev => 3);
-                                                                setVisibleAprovar((prev) => true);
-
+                                                                setLoading(prev => true)
+                                                                await new Usuario().remover({ id: user?.id });
+                                                                setLoading(prev => false)
                                                             }
                                                             if (e.target.value == 4) {
                                                                 setOpenRecusar((prev) => !true);
@@ -398,8 +410,8 @@ export default function Listar() {
                                                         sx={0}
                                                     >
                                                         <option>selecione</option>
-                                                        <option value={1}>visualisar</option>
-                                                        <option value={2}>Editar</option>
+                                                        {/* {<option value={1}>visualisar</option>} */}
+                                                        {/* <option value={2}>Editar</option>*/}
                                                         <option value={3}>Remover</option>
 
                                                     </CFormSelect>

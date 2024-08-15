@@ -23,6 +23,10 @@ import { Cliente } from "./util";
 import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 import useAuth from "app/hooks/useAuth";
 import { useApi } from "app/hooks/useApi";
+import Processo from "../processo/util";
+import { Usuario } from "../usuario/util";
+import { Projecto } from "../projecto/util";
+import Visto from "../visas/util";
 
 // import Step from "./components/StepProgress";
 
@@ -33,6 +37,19 @@ export default function Detalhar() {
     const clienteClass = new Cliente()
     const [render, setRender] = useState(0);
     const [cliente, setCliente] = useState('');
+    const [processos, setProcessos] = useState({
+        cancelados: 0,
+        submetidos: 0,
+        recusados: 0,
+        andamento: 0,
+        pendente: 0,
+        finalizado: 0
+    });
+    const [vistos, setVistos] = useState({
+        activos: 0,
+        expirados: 0
+    })
+
     const [loading, setLoading] = useState(false);
     const [visibleMapa, setVisibleMapa] = useState(false);
     let { clienteId } = useParams()
@@ -55,7 +72,6 @@ export default function Detalhar() {
     const { user } = useAuth();
     if (user?.painel?.nome === "CLIENTE") {
         clienteId = user?.clienteId
-
     }
     async function actualizarStatus(data) {
         setLoading(prev => !prev)
@@ -67,18 +83,69 @@ export default function Detalhar() {
         setLoading(prev => !prev)
         window.location.reload()
     }
-
     async function buscarCliente() {
-        console.log("ID C", clienteId);
-        const { data } = await api.list(`clientes/${clienteId}`);
-        console.log("CLIENTESSSSSSSSSSSS", data?.cliente);
-        setCliente(data?.cliente)
+        try {
+            // Fetch client data
+            const { data } = await api.list(`clientes/${clienteId}`);
+            console.log("CLIENTE", data);
+
+            setCliente(data?.cliente);
+
+            // Fetch counts of different process statuses
+            const processosSubmetidos = await new Processo().contar({ clienteId });
+            const processosPendentes = await new Processo().contar({ clienteId, statusId: 1 });
+            const processosCancelados = await new Processo().contar({ clienteId, statusId: 6 });
+            const processosFinalizados = await new Processo().contar({ clienteId, statusId: 4 });
+            const processosAndamento = await new Processo().contar({ clienteId, statusId: 2 });
+            const processosRecusado = await new Processo().contar({ clienteId, statusId: 5 });
+
+            const vistosActivos = await new Visto().contar({ clienteId, activo: true });
+            const vistosExpirados = await new Visto().contar({ clienteId, activo: false });
+
+            // Update state
+            setProcessos(prev => ({
+                ...prev, // Keep previous state
+                cancelados: processosCancelados,
+                submetidos: processosSubmetidos,
+                recusados: processosRecusado,
+                andamento: processosAndamento,
+                pendente: processosPendentes,
+                finalizado: processosFinalizados
+            }));
+
+            setVistos(
+                prev => ({
+                    ...prev,
+                    activos: vistosActivos,
+                    expirados: vistosExpirados
+                })
+            )
+        } catch (error) {
+            console.error('Erro ao buscar cliente e processos:', error);
+            // Handle error as needed
+        }
     }
 
+    const projecto = new Projecto()
+    const [totalProjecto, setTotalProjecto] = useState()
+    async function contarProjecto() {
+        const res = await projecto.contar();
+        setTotalProjecto(prev => res)
+    }
+
+    const usuario = new Usuario()
+    const [totalgestores, setTotalgestores] = useState();
+    async function contarUsuario() {
+        const res = await usuario?.contar({ clienteId, painelId: 5 });
+
+        setTotalgestores(prev => res)
+    }
 
 
     useEffect(() => {
         buscarCliente()
+        contarProjecto()
+        contarUsuario()
     }, [render])
     const location = useLocation();
     const routeSegments = generateBreadcrumbs(location);
@@ -91,12 +158,10 @@ export default function Detalhar() {
                         routeSegments={routeSegments}
                     />
                 </Box>
-
                 <span className="mb-4">
                     {cliente?.nome}/{cliente?.nomeEmpresa}
                 </span>
                 <CNav className="mt-4" variant="tabs">
-
                     <CNavItem>
                         <CNavLink
                             style={{
@@ -154,7 +219,7 @@ export default function Detalhar() {
                             onClick={() => setRender((prev) => 7)}
                             active={render === 7 ? true : false}
                         >
-                            TÉCNICOS
+                            BENEFICIÁRIOS
                         </CNavLink>
                     </CNavItem>
                     <CNavItem>
@@ -182,36 +247,69 @@ export default function Detalhar() {
                     <CTabPane data="trabalho" className="preview" visible={render === 0 ? true : false}>
                         <Resumo data={[
                             {
+                                name: "Gestores",
+                                amount: totalgestores || 0,
+                                Icon: PeopleAlt,
+                                bgColor: "secondary"
+                            },
+                            {
                                 name: "Projectos",
-                                amount: cliente?.projectos?.lenght || 0,
+                                amount: cliente?.projectos?.length || 0,
                                 Icon: Folder,
                                 path: "vistos/list",
                                 bgColor: "primary"
                             },
+
                             {
                                 name: "Processos Submetidos",
-                                amount: cliente?.processos?.lenght || 0,
+                                amount: processos.submetidos || 0,
                                 color: "black",
                                 Icon: SendAndArchive,
                                 bgColor: "info"
                             },
                             {
+                                name: "Processos Pendentes",
+                                amount: processos.pendente || 0,
+                                color: "black",
+                                Icon: SendAndArchive,
+                                bgColor: "secondary"
+                            },
+                            {
+                                name: "Processos Em Andamento",
+                                amount: processos.andamento || 0,
+                                color: "black",
+                                Icon: SendAndArchive,
+                                bgColor: "warning"
+                            },
+                            {
                                 name: "Processos Finalizados",
-                                amount: cliente?.processosSubmetodos?.lenght || 0,
+                                amount: processos.finalizado || 0,
                                 Icon: FilePresent,
                                 bgColor: "success"
                             },
                             {
-                                name: "Processos Atrasados",
-                                amount: cliente?.processosAtrasados?.lenght || 0,
+                                name: "Processos Cancelados",
+                                amount: processos.cancelados || 0,
                                 Icon: PeopleAlt,
                                 bgColor: "danger"
                             },
                             {
-                                name: "Gestores",
-                                amount: cliente?.gestores?.lenght || 0,
+                                name: "Processos recusadoss",
+                                amount: processos.recusados || 0,
                                 Icon: PeopleAlt,
-                                bgColor: "secondary"
+                                bgColor: "danger"
+                            },
+                            {
+                                name: "Vistos activos",
+                                amount: vistos.activos || 0,
+                                Icon: PeopleAlt,
+                                bgColor: "success"
+                            },
+                            {
+                                name: "Vistos Expirados",
+                                amount: vistos.inactivos || 0,
+                                Icon: PeopleAlt,
+                                bgColor: "danger"
                             },
 
                         ]} ></Resumo>

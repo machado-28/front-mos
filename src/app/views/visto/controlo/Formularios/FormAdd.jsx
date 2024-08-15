@@ -59,7 +59,7 @@ export default function FormAdd() {
                 },
                 { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
             ),
-        sindicato: z
+        consulado: z
             .string()
             .regex(validatePersonNames, "incorrecto")
             .refine(
@@ -290,6 +290,8 @@ export default function FormAdd() {
                 const { data } = response
                 console.log("RESPOSTA SUCESSO", response);
                 setLoading(false);
+                if (!response?.data?.message)
+                    return;
                 Notify(response?.data?.message);
                 window.location.reload();
             });
@@ -404,11 +406,11 @@ export default function FormAdd() {
                             readOnly
                             disabled
                             text={
-                                errors.sindicato && (
-                                    <div className="text-light bg-danger">{errors.sindicato.message}</div>
+                                errors.consulado && (
+                                    <div className="text-light bg-danger">{errors.consulado.message}</div>
                                 )
                             }
-                            {...register("sindicato")}
+                            {...register("  consulado")}
                         />
                     </CCol>
 
@@ -434,11 +436,11 @@ export default function FormAdd() {
                             aria-label=" "
                             aria-describedby="exampleFormControlInputHelpInline"
                             text={
-                                errors.sindicato && (
-                                    <div className="text-light bg-danger">{errors.sindicato.message}</div>
+                                errors.consulado && (
+                                    <div className="text-light bg-danger">{errors.consulado.message}</div>
                                 )
                             }
-                            {...register("sindicato")}
+                            {...register("  consulado")}
                         />
                     </CCol>
 
@@ -450,13 +452,13 @@ export default function FormAdd() {
                             label="Anexo"
                             aria-label=" "
                             aria-describedby="exampleFormControlInputHelpInline"
-                            
+
                             text={
-                                errors.sindicato && (
-                                    <div className="text-light bg-danger">{errors.sindicato.message}</div>
+                                errors.consulado && (
+                                    <div className="text-light bg-danger">{errors.consulado.message}</div>
                                 )
                             }
-                            {...register("sindicato")}
+                            {...register("  consulado")}
                         />
                     </CCol>
                 </CRow>

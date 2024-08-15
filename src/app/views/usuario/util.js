@@ -33,7 +33,7 @@ class Usuario {
 
     }
 
-    async buscarTodos({ id, tipoId, orderBy, order, date, clienteId, painelId }={}) {
+    async buscarTodos({ id, tipoId, orderBy, order, date, clienteId, painelId } = {}) {
         const api = useApi()
         const usuarios = await api.listQuery(`usuarios?id=${id}&orderBy=${orderBy}&order=${order}&date=${date}&clienteId=${clienteId}&painelId=${painelId}`).then((resp) => {
             console.table("%cUsuarios", "font-size:xx-large; color: blue", resp?.data?.usuarios);
@@ -56,10 +56,21 @@ class Usuario {
             console.log(error);
             NotifyError("erro insperdo ");
         })
+        if (!response?.data?.message)
+            return;
         Notify(response?.data?.message);
         window.location.reload()
         return message
 
+    }
+    async remover({ id }) {
+        try {
+            const api = useApi();
+
+            await api.delete("usuarios", id)
+        } catch (error) {
+            Notify(response?.data?.message)
+        }
     }
 
     async painels() {
@@ -74,7 +85,7 @@ class Usuario {
         })
         return painels
     }
-    async contar({ id, date, clienteId, painelId }={}) {
+    async contar({ id, date, clienteId, painelId } = {}) {
         const api = useApi()
         const total = await api.listQuery(`usuarios/count?id=${id}&clienteId=${clienteId}&painelId=${painelId}`).then((resp) => {
             console.table("%cUsuarios total", "font-size:xx-large; color: blue", resp?.data?.total);

@@ -104,11 +104,9 @@ export default function FormAdd() {
             setLoading(true);
             dados.clienteId = clienteId;
             dados.painelId = 5;
-            const response = await gestor.criar({ data: dados });
+            const response = await gestor.criar({ data: dados }).then((res) => res);
             setLoading(false);
-            Notify(response?.data?.message);
-            if (response) window.location.reload()
-
+            reset({})
         } catch (error) {
             NotifyError("Älgo deu Errado");
             console.log(error);
@@ -122,26 +120,20 @@ export default function FormAdd() {
     return (
         <CForm onSubmit={handleSubmit(PostData)} style={{ borderRadius: "none" }}>
             <Box pt={4}></Box>
-
-
             <div className="w-100 d-flex  justify-content-between">
                 <H2>Cadastro de  Gestor(responsável) de Projecto <Folder></Folder> </H2>
                 <div>
-
                     <LoadingButton
                         className="text-white px-4 "
                         color="success"
                         type="submit"
                         loading={loading}
                         variant="contained"
-
                     >
                         Salvar
                     </LoadingButton>
                 </div>
-
             </div>
-
             <Box pt={3}></Box>
             <CRow className="mb-4">
                 <CCol>
@@ -156,11 +148,8 @@ export default function FormAdd() {
                         {...register("nome")}
                     />
                 </CCol>
-
             </CRow>
             <CRow className="mb-4">
-
-
                 <CCol>
                     <CFormInput
                         type="text"
@@ -175,7 +164,6 @@ export default function FormAdd() {
                         required
                         {...register("usuario")}
                     >
-
                     </CFormInput>
                 </CCol>
                 <CCol>
@@ -192,13 +180,10 @@ export default function FormAdd() {
                         required
                         {...register("senha")}
                     >
-
                     </CFormInput>
                 </CCol>
             </CRow>
-
             <CRow className="mb-4">
-
                 <CCol>
                     <CFormInput
                         type="tel"
@@ -213,7 +198,6 @@ export default function FormAdd() {
                         required
                         {...register("telefone")}
                     >
-
                     </CFormInput>
                 </CCol>
                 <CCol>
@@ -230,11 +214,9 @@ export default function FormAdd() {
                         required
                         {...register("email")}
                     >
-
                     </CFormInput>
                 </CCol>
             </CRow>
-
         </CForm>
     );
 }

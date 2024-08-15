@@ -50,5 +50,5 @@ export default function DoughnutChart({ height, processos = [], colors = [] }) {
     ]
   };
 
-  return <ReactEcharts style={{ height: height }} option={{ ...option, color: [...colors] }} />;
+  return <ReactEcharts   option={{ ...option, color: [...colors] }} />;
 }

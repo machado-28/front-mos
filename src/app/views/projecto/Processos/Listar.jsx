@@ -437,11 +437,11 @@ export default function Listar() {
                         Mapa <Print></Print>
                     </Link>
 
-                    <Link to={`/cliente/${clientId}/tecnico/2/processo/add`}>
+                    {/* <Link to={`/cliente/${clientId}/tecnico/${tecnicoIf}/processo/add`}>
                         <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
                             Criar Novo <Add></Add>
                         </StyledButton>
-                    </Link>
+                    </Link> */}
                 </div>
 
             </div>

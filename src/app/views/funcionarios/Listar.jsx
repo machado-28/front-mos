@@ -1,0 +1,511 @@
+import {
+    CAlert,
+    CBadge,
+    CButton,
+    CCallout,
+    CCol,
+    CContainer,
+    CForm,
+    CFormInput,
+    CFormSelect,
+    CFormSwitch,
+    CFormTextarea,
+    CInputGroup,
+    CInputGroupText,
+    CModal,
+    CModalBody,
+    CModalFooter,
+    CModalHeader,
+    CModalTitle,
+    CRow,
+    CSpinner
+} from "@coreui/react";
+import {
+    AppRegistration,
+    Download,
+    FileOpen,
+    Folder,
+    FolderCopySharp,
+    Person,
+    PlusOne,
+    Print,
+    Search,
+    TroubleshootOutlined
+} from "@mui/icons-material";
+import {
+    Avatar,
+    Badge,
+    Box,
+    Button,
+    Card,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TablePagination,
+    TableRow,
+    TextField,
+    styled,
+    useTheme
+} from "@mui/material";
+import { H1, H2, H3, Paragraph } from "app/components/Typography";
+import { useApi } from "app/hooks/useApi";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import "./style.css";
+// import { ChartLine } from "./ChartLine";
+import { NotifyError } from "app/utils/toastyNotification";
+import { formatDateDifference } from "app/utils/validate";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import Add from "@mui/icons-material/Add";
+import useAuth from "app/hooks/useAuth";
+import { ClockIcon } from "@mui/x-date-pickers";
+import { Breadcrumb, SimpleCard } from "app/components";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
+import StatCards from "../dashboard/shared/StatCards";
+import FormAddFuncionarios from "./Formularios/add/FormAddFuncionarios";
+
+
+// STYLED COMPONENTS
+const CardHeader = styled(Box)(() => ({
+    display: "flex",
+    paddingLeft: "24px",
+    paddingRight: "24px",
+    marginBottom: "12px",
+    alignItems: "center",
+    justifyContent: "space-between"
+}));
+
+const Title = styled("span")(() => ({
+    fontSize: "1.4rem",
+    fontWeight: "500",
+    textTransform: "capitalize"
+}));
+
+const ProductTable = styled(Table)(() => ({
+    minWidth: 400,
+    whiteSpace: "pre",
+    "& small": {
+        width: 50,
+        height: 15,
+        borderRadius: 500,
+        boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.12), 0 2px 2px 0 rgba(0, 0, 0, 0.24)"
+    },
+    "& td": { borderBottom: "none" },
+    "& td:first-of-type": { paddingLeft: "16px !important" }
+}));
+
+const Small = styled("small")(({ bgcolor }) => ({
+    width: 50,
+    height: 15,
+    color: "#fff",
+    padding: "2px 8px",
+    borderRadius: "4px",
+    overflow: "hidden",
+    background: bgcolor,
+    boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.12), 0 2px 2px 0 rgba(0, 0, 0, 0.24)"
+}));
+const AppButtonRoot = styled("div")(({ theme }) => ({
+    margin: "30px",
+    [theme.breakpoints.down("sm")]: { margin: "16px" },
+    "& .breadcrumb": {
+        marginBottom: "30px",
+        [theme.breakpoints.down("sm")]: { marginBottom: "16px" }
+    },
+    "& .button": { margin: theme.spacing(1) },
+    "& .input": { display: "none" }
+}));
+export default function Listar() {
+    const { palette } = useTheme();
+    const bgError = palette.error.main;
+    const bgPrimary = palette.primary.main;
+    const bgSecondary = palette.secondary.main;
+    const [page, setPage] = useState(0);
+    const [OrigemId, setOrigemId] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const goto = useNavigate();
+
+    const handleChangePage = (_, newPage) => {
+        setPage(newPage);
+    };
+    const api = useApi();
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(+event.target.value);
+        setPage(0);
+    };
+
+    const [filtroStatus, setFiltroStatus] = useState(0);
+
+    function handleFiltroStatus(e) {
+        setFiltroStatus((prev) => e);
+    }
+    const fSize = "0.775rem";
+    const [searchTerm, setSearchTerm] = useState("");
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const StyledButton = styled(Button)(({ theme }) => ({
+        margin: theme.spacing(1)
+    }));
+
+    const addAprovarShema = z.object({
+        descricao: z.string()
+    });
+
+
+    const {
+        register,
+        reset,
+        watch,
+        handleSubmit,
+        formState: { errors }
+    } = useForm({
+        resolver: zodResolver(addAprovarShema),
+        shouldFocusError: true,
+        progressive: true
+    });
+
+    const gerarMapa = async () => {
+        setLoading(prev => true)
+        await api.add("pdf").then(res => {
+            setLoading(prev => false);
+            console.log(res);
+        }).catch((err) => {
+            console.log(err);
+            setLoading(prev => false);
+        });
+    }
+    let { clienteId } = useParams();
+    const { user } = useAuth();
+    const { gestorId } = useParams();
+
+
+    // let clienteId=1
+    const [loading, setLoading] = useState(false);
+    const [visibleMapa, setVisibleMapa] = useState(false);
+    const [funcionarios, setfuncionarios] = useState([]);
+    const [order, setOrder] = useState("DESC");
+    const [orderBy, setOrderBy] = useState("nome");
+    const [date, setDate] = useState();
+
+
+
+    // + (new Date(project?.createdAt).getDay().toString()).includes(searchTerm?.toLowerCase())
+    const filteredFuncionarios = funcionarios?.filter((funcionario) =>
+        funcionario?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
+    )
+
+    const styleDropdown = {};
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
+    const [visibleModalAdd, setVisibleModalAdd] = useState()
+
+    return (
+        <AppButtonRoot>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
+            <SimpleCard color="">
+                <div className="w-100 d-flex  justify-content-between">
+                    <H2>Funcionários ({funcionarios?.length})  <Person></Person></H2>
+                    <section className="d-flex">
+                        <Link
+                            onClick={() => {
+                                setVisibleMapa(prev => true)
+                            }}
+                        >
+                            <StyledButton className="d-flex align-content-center" size="sm" variant="contained" color="info">
+                                IMPRIMIR <Print></Print>
+                            </StyledButton>
+                        </Link>
+
+                        <Link >
+                            <StyledButton onClick={() => setVisibleModalAdd(prev => true)} className="d-flex align-content-center" size="sm" variant="contained" color="success">
+                                Criar Novo
+                            </StyledButton>
+                        </Link>
+
+                    </section>
+                    <CModal
+                        fullscreen
+                        alignment="center"
+                        visible={visibleModalAdd}
+                        onClose={() => setVisibleModalAdd(false)}
+                        aria-labelledby="FullscreenExample1"
+                    >
+                        <CModalHeader>
+                            <CModalTitle id="FullscreenExample1">Registo de Novo Funcionário</CModalTitle>
+                        </CModalHeader>
+                        <CForm onSubmit>
+                            <CModalBody>
+                                <FormAddFuncionarios visible={visibleModalAdd} setVisible={setVisibleModalAdd} loading={loading} setLoading={setLoading} ></FormAddFuncionarios>
+                            </CModalBody>
+
+                        </CForm>
+                    </CModal>
+                </div>
+            </SimpleCard>
+            <Box pt={4}></Box>
+
+
+            <CRow>
+                <CCol>
+                    <CCallout>
+                        <div>
+                            <strong> Total </strong>
+                            <H1>12</H1>
+                        </div>
+                    </CCallout>
+                </CCol>
+                <CCol>
+                    <CCallout color="success">
+                        <div>
+                            <strong> Activos </strong>
+                            <H1>12</H1>
+                        </div>
+                    </CCallout>
+                </CCol>
+                <CCol>
+                    <CCallout color="secondary">
+                        <div>
+                            <strong> Inactivos </strong>
+                            <H1>12</H1>
+                        </div>
+                    </CCallout>
+                </CCol>
+                <CCol>
+                    <CCallout color="danger">
+                        <div>
+                            <strong> Demitidos </strong>
+                            <H1>12</H1>
+                        </div>
+                    </CCallout>
+                </CCol>
+                <CCol>
+                    <CCallout color="warning">
+                        <div>
+                            <strong> Afastados </strong>
+                            <H1>12</H1>
+                        </div>
+                    </CCallout>
+                </CCol>
+            </CRow>
+            <Box pt={4}>{/* <Campaigns /> */}</Box>
+
+            <Card elevation={3} sx={{ pt: "10px", mb: 3 }}>
+                <CContainer className="d-flex justify-content-between">
+                </CContainer>
+                <CardHeader className="d-flex justify-content-center align-items-center">
+                    <CInputGroup size="sm">
+                        <CInputGroupText size="sm">
+                            <Search size="sm"></Search>
+                        </CInputGroupText>
+                        <CFormInput
+                            type="text"
+                            size="sm"
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            placeholder="projecto,gestor"
+                        />
+                    </CInputGroup>
+
+                    <div className="d-flex w-100   "  >
+
+                        <CFormSelect size="sm"
+                            onChange={(event) => { setOrderBy(prev => event.target.value) }}
+                            id="validationServer05"  >
+                            <option value={"nome"} selected>
+                                Ordenar por
+                            </option>
+
+                            <option value={"createdAt"}>
+                                Data de Criação
+                            </option>
+                            <option value={"nome"}>
+                                nome
+                            </option>
+                            <option value={"clienteId"}>
+                                cliente
+                            </option>
+
+
+                        </CFormSelect>
+                        <CFormSelect onChange={(event) => { setOrder(prev => event.target.value) }}
+                            size="sm"
+                            id="validationServer05"  >
+                            <option value={"DESC"} selected>
+                                ordenar
+                            </option>
+
+                            <option value={"ASC"}>
+                                Ascendente
+                            </option>
+                            <option value={2}>
+                                Decrescente
+                            </option>
+
+                        </CFormSelect>
+                        <CFormInput onChange={(event) => setDate(prev => new Date(event.target.value))} size="sm" type="date"></CFormInput>
+                    </div>
+                </CardHeader>
+                <Box overflow="auto">
+                    <ProductTable>
+                        <TableHead>
+                            <TableRow>
+
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Projecto
+                                </TableCell>
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    ges Interno
+                                </TableCell>
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    ges externo
+                                </TableCell>
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Tot.processos
+                                </TableCell>
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Dat. registo
+                                </TableCell>
+                                <TableCell colSpan={1} sx={{ px: 0 }}>
+                                    Acções
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+
+                        <TableBody>
+                            {loading ? (
+                                <CSpinner></CSpinner>
+                            ) : (
+                                <>
+                                    {filteredFuncionarios
+                                        ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                        ?.map((proj, index) => (
+                                            <TableRow key={index} hover>
+
+
+                                                <TableCell
+                                                    colSpan={3}
+                                                    align="left"
+                                                    sx={{ px: 2, textTransform: "capitalize" }}
+                                                >
+                                                    <Box display="flex" alignItems="center" gap={4}>
+
+                                                        <Paragraph> <Folder fontSize="large" color={index % 2 == 0 ? "info" : "warning"}></Folder>   {proj?.nome}</Paragraph>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <CBadge className={proj.gestorInterno?.nome ? "bg-warning text-black" : "bg-secondary text-black"} > {proj?.gestorInterno?.nome || "Não Definido"}  </CBadge>
+                                                    </Paragraph>
+                                                </TableCell>
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <CBadge className="bg-info text-white" > {proj?.gestorExterno?.nome?.toUpperCase() || "INDEFINIDO"}  </CBadge>
+                                                    </Paragraph>
+                                                </TableCell>
+
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <CBadge className="bg-danger text-white fs-6" > {proj?.processos?.length || 0}  </CBadge>
+
+                                                    </Paragraph>
+                                                </TableCell>
+
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
+                                                    <Paragraph style={{ fontSize: fSize }}>
+                                                        <ClockIcon></ClockIcon>
+                                                        {formatDateDifference(new Date(proj?.createdAt))}
+
+                                                    </Paragraph>
+                                                </TableCell>
+                                                <TableCell sx={{ px: 0 }} align="left" colSpan={3}>
+                                                    <CFormSelect
+                                                        style={{ fontSize: "12px", minWidth: "6.45rem" }}
+                                                        id="validationServer04"
+                                                        onChange={async (e) => {
+                                                            if (e.target.value == 1) {
+                                                                return goto(
+                                                                    `/clientes/${proj?.clienteId}/projectos/${proj?.id}/detalhar`
+                                                                );
+                                                            }
+                                                            if (e.target.value == 2) {
+                                                                return goto(
+                                                                    `/projectos/${proj?.id}/editar/${proj?.clienteId}`
+                                                                );
+                                                            } <CCol>
+                                                                <CFormSelect
+                                                                    label="Categoria"
+                                                                    aria-describedby="exampleFormControlInputHelpInline"
+                                                                    text={
+                                                                        errors.nacionalidade && (
+                                                                            <div className="text-light bg-danger">{errors.nacionalidade.message}</div>
+                                                                        )
+                                                                    }
+                                                                    required
+                                                                    {...register("categoria")}
+                                                                >
+                                                                    <option selected aria-readonly>selecione a categoria</option>
+                                                                    {[{ name: "1 vez" }, { name: "prorrogação" }]?.map((pais) => (
+                                                                        <option value={pais.name} key={pais.name}>
+                                                                            {pais.name}
+                                                                        </option>
+                                                                    ))}
+                                                                </CFormSelect>
+                                                                {errors.nacionalidade && (
+                                                                    <div className="text-light bg-danger">{errors.nacionalidade.message}</div>
+                                                                )}
+                                                            </CCol>
+
+                                                            if (e.target.value == 3) {
+                                                                console.log("projecto Id", proj?.id);
+                                                                setPedido(prev => proj?.id);
+                                                                setUpdateStatusId(prev => 3);
+                                                                setVisibleAprovar((prev) => true);
+                                                            }
+                                                            if (e.target.value == 4) {
+                                                                setOpenRecusar((prev) => !true);
+                                                            }
+
+                                                            console.log(e.target.value);
+                                                        }}
+
+                                                        sx={0}
+                                                    >
+                                                        <option>selecione</option>
+                                                        <option value={1}>ver processos</option>
+                                                        <option value={2}>Editar</option>
+                                                    </CFormSelect>
+                                                </TableCell>
+
+                                            </TableRow>
+                                        ))}
+                                </>
+                            )}
+                        </TableBody>
+                    </ProductTable>
+                    <TablePagination
+                        sx={{ px: 2 }}
+                        page={page}
+                        component="div"
+                        rowsPerPage={rowsPerPage}
+                        count={funcionarios?.length}
+                        onPageChange={handleChangePage}
+                        rowsPerPageOptions={[50, 100, 200]}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                        nextIconButtonProps={{ "aria-label": "Página seguinte" }}
+                        backIconButtonProps={{ "aria-label": "Página anterior" }}
+                    />
+                </Box>
+                <Box pt={3}></Box>
+            </Card>
+        </AppButtonRoot >
+    );
+}

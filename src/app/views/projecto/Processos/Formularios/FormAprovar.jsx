@@ -47,10 +47,12 @@ export default function FormAprovar({ handleClose, processoId }) {
           //   console.log("DATAERRO", response);
 
           //   setLoading(false);
-           
+
           // }
 
           setLoading(false);
+          if (!response?.data?.message)
+            return;
           Notify(response?.data?.message);
           window.location.reload();
         });

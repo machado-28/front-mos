@@ -1,7 +1,9 @@
 import {
+    CAlert,
     CAvatar,
     CBadge,
     CButton,
+    CCallout,
     CCol,
     CContainer,
     CForm,
@@ -16,18 +18,28 @@ import {
     CModalFooter,
     CModalHeader,
     CModalTitle,
+    CRow,
     CSpinner
 } from "@coreui/react";
 import {
+    AirplaneTicket,
+    CallToAction,
     Download,
+    DownloadOutlined,
     FolderCopySharp,
     Image,
     Person,
     PlusOne,
+    PostAdd,
+    Print,
+    PunchClock,
+    ReceiptLongSharp,
     Search,
+    Send,
     TroubleshootOutlined
 } from "@mui/icons-material";
 import {
+    Avatar,
     Box,
     Button,
     Card,
@@ -44,18 +56,26 @@ import {
 import { Paragraph } from "app/components/Typography";
 import { useApi } from "app/hooks/useApi";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import "./style.css";
 // import { ChartLine } from "./ChartLine";
 import { NotifyError } from "app/utils/toastyNotification";
 import { formatDateDifference } from "app/utils/validate";
 
-import { Projecto } from "./util";
-import { StatusBadge, VistoBadge } from "./function";
+import { Projecto } from "./../projecto/util";
+import { CustomBadge, StatusBadge, VistoBadge } from "./function";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Add from "@mui/icons-material/Add";
+import { LoadingButton } from "@mui/lab";
+import Processo from "./util";
+import useAuth from "app/hooks/useAuth";
+import { Breadcrumb } from "app/components";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
+import Visto from "../visas/util";
+import FormAdd from "../visas/Formularios/FormAdd";
+import AddvistoShema from "../visas/Formularios/schemas/AddvistoShema";
 
 // STYLED COMPONENTS
 const CardHeader = styled(Box)(() => ({
@@ -106,7 +126,32 @@ const AppButtonRoot = styled("div")(({ theme }) => ({
     "& .button": { margin: theme.spacing(1) },
     "& .input": { display: "none" }
 }));
+const loadMapashema = z.object({
+    tipoVistoId: z
+        .string()
+        .min(1, { message: "Este campo é obrigatorio" }),
+
+    month: z.coerce
+        .string({ message: "Telefone Incorrecto" })
+        .min(1, { message: "Este campo é obrigatorio" }),
+    year: z.string().default(new Date().getFullYear().toString())
+
+
+});
 export default function Listar() {
+    const {
+        register,
+        reset,
+        watch,
+        handleSubmit,
+        formState: { errors }
+    } = useForm({
+        resolver: zodResolver(AddvistoShema),
+        shouldFocusError: true,
+        progressive: true
+    });
+
+    const { user } = useAuth()
     const { palette } = useTheme();
     const bgError = palette.error.main;
     const bgPrimary = palette.primary.main;
@@ -114,20 +159,20 @@ export default function Listar() {
     const [page, setPage] = useState(0);
     const [OrigemId, setOrigemId] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [order, setOrder] = useState("DESC");
+    const [orderBy, setOrderBy] = useState("nome");
+    const [date, setDate] = useState();
     const goto = useNavigate();
+    const [visibleMapa, setVisibleMapa] = useState(false);
+    const api = useApi();
+    const [vistos, setVistos] = useState([{ nome: "Turismo" }, { nome: "Trabalho" }]);
+    const [status, setStatus] = useState([{ nome: "pendente" }])
+    const [fases, setFazes] = useState([{ nome: "Legalização" }])
+    const [filtroStatus, setFiltroStatus] = useState(0);
 
     const handleChangePage = (_, newPage) => {
         setPage(newPage);
     };
-    const api = useApi();
-
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(+event.target.value);
-        setPage(0);
-    };
-
-    const [filtroStatus, setFiltroStatus] = useState(0);
-
     function handleFiltroStatus(e) {
         setFiltroStatus((prev) => e);
     }
@@ -136,187 +181,150 @@ export default function Listar() {
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
     };
-
     const StyledButton = styled(Button)(({ theme }) => ({
         margin: theme.spacing(1)
     }));
 
-    const addAprovarShema = z.object({
-        descricao: z.string()
-    });
+    const { clienteId, projectoId } = useParams()
+    const [processoId, setProcessoId] = useState()
+    const [processoInfo, setProcessoInfo] = useState()
+    const [projectoData, setProjectoData] = useState({})
 
+    const projecto = new Projecto();
+    async function buscarProjecto() {
+        const res = await projecto.buscar({ id: projectoId, order, orderBy });
+        setProjectoData(prev => res[0])
+    }
 
-    const {
-        register,
-        reset,
-        watch,
-        handleSubmit,
-        formState: { errors }
-    } = useForm({
-        resolver: zodResolver(addAprovarShema),
-        shouldFocusError: true,
-        progressive: true
-    });
-
-    const { passaporte: clientId = 1 } = useParams()
-    // let clientId=1
     const [loading, setLoading] = useState(false);
-    const [projectos, setProjectos] = useState([]);
-    const [totalProjectos, setTotalProjectos] = useState(0);
-    const [totalProjectosLocal, setTotalProjectosLocal] = useState(0);
-    const [totalProjectosSite, setTotalProjectosSite] = useState(0);
-    const [visibleMapa, setVisibleMapa] = useState(false);
+    const [processos, setProcessos] = useState([]);
+    const [totalProcessos, setTotalProcessos] = useState(0);
+    const [visibleRegistarVisto, setVisibleRegistarVisto] = useState(false);
 
-    const [statusId, setStatusId] = useState(null);
-    const [tipoId, setTipoId] = useState(null);
-    const [tipoVistoId, setTipoVistoId] = useState(null);
-    const [fromSite, setFromSite] = useState(null);
-    const [visibleAprovar, setVisibleAprovar] = useState(false);
+    function handleProcesso({ processo }) {
+        setProcessoId(prev => processo?.processo.id)
+        setProcessoInfo(prev => processo)
 
-    const [statusToUpdateId, setUpdateStatusId] = useState(null);
-    const [pedidoId, setPedido] = useState(null);
-    const [descricao, setDescricao] = useState("");
-
-
-    const buscarTotalProjectosSite = async () => {
-        setLoading((prev) => !prev);
-        await api.listQuery(`pedidos?fromSite=${true}`).then((resp) => {
-            console.log("pedidos", resp);
-            setTotalProjectosSite(prev => resp?.data?.total || 0)
-        })
-        setLoading((prev) => !prev);
     }
-
-    const buscarTotalProjectosLocal = async () => {
-        setLoading((prev) => !prev);
-        await api.listQuery(`pedidos?fromSite=${false || null}`).then((resp) => {
-            console.log("pedidos", resp);
-            setTotalProjectosLocal(prev => resp?.data?.total || 0)
-        })
-        setLoading((prev) => !prev);
+    console.log("PROCESSO ID", processoId, processoInfo);
+    const gerarMapa = async (data) => {
+        setLoading(prev => true)
+        const processo = new Processo();
+        await processo.gerarMapa({ data, projectoId })
+        setLoading(prev => false)
     }
-
-    const buscarTotalProjectosVisto = async ({ vistoId }) => {
-        setLoading((prev) => !prev);
-        await api.listQuery(`pedidos?tipoVistoId=${vistoId}`).then((resp) => {
-            console.log("pedidos", resp);
-            if (resp.request?.status === 200) {
-                setProjectos(prev => resp?.data?.pedidos || []);
-            }
-        });
-
-        setLoading((prev) => !prev);
+    const buscarProcesso = async (data) => {
+        setLoading(prev => true)
+        const processo = new Processo();
+        const res = await processo.progresso({ projectoId, stepId: 6, statusId: 4 })
+        setProcessos(prev => res.progresso)
+        setLoading(prev => false)
+        console.log("PROGRESSO", res.progresso);
     }
+    const registarVisto = async ({ data }) => {
+        setLoading(prev => true)
+        const vistoClass = new Visto();
+        const res = await vistoClass.criar({ data })
 
-    async function actualizarStatus(data) {
-        setLoading(prev => !prev)
-        data.statusId = statusToUpdateId;
-        data.pedidoId = pedidoId
-        console.log("DATAFORM", data);
-        const c_pedido = new Projecto();
-        await c_pedido.actualizarStatus(data);
-        setLoading(prev => !prev)
-        window.location.reload()
+        setLoading(prev => false)
+        console.log("PROGRESSO", res.progresso);
     }
-
-    async function ListarProjectos() {
-        try {
-            setLoading((prev) => !prev);
-            await api
-                .listQuery(`pedidos?statusId=${statusId}&tipoId=${tipoId}&tipoVistoId=${tipoVistoId}&fromSite=${fromSite}`)
-                .then((resp) => {
-                    console.log("pedidos", resp);
-                    const Projectos = resp?.data?.pedidos || [] || [];
-                    const total = resp?.data?.total || 0;
-                    console.log(Projectos);
-                    if (resp.request?.status === 200) {
-                        setProjectos(prev => resp?.data?.pedidos || []);
-                        setTotalProjectos(prev => resp?.data?.total)
-                    }
-
-                })
-                .finally(() => {
-                    setLoading((prev) => !prev);
-                });
-        } catch (error) {
-            console.log(error);
-            NotifyError(error)
-        }
-    }
-
-
-
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(+event.target.value);
+        setPage(0);
+    };
     useEffect(() => {
-        ListarProjectos();
+        buscarProjecto();
+        buscarProcesso()
+    }, [])
 
-    }, [totalProjectos,]);
-
-    useEffect(() => {
-        buscarTotalProjectosLocal();
-
-    }, [totalProjectosLocal,])
-    useEffect(() => {
-        buscarTotalProjectosSite();
-    }, [totalProjectosSite,]);
-
-    async function gerarIndividualPDF(Projectos) {
-        setLoadingDocumento((prev) => !prev);
-        await api.documento("pedidos/pdf/", Projectos).finally(() => {
-            setLoadingDocumento((prev) => !prev);
-        });
-    }
-    async function gerarInd(Projectos) {
-        setLoadingDocumento((prev) => !prev);
-        await api.documento("pedidos/pdf/", Projectos).finally(() => {
-            setLoadingDocumento((prev) => !prev);
-        });
-    }
+    console.log("PROGRESSO 2", processos);
     console.log("ERRO FORM", errors);
-    const c_Projectos = new Projecto()
-    async function buscarEntidade() {
-        try {
-            await api
-                .listQuery(`fazes`)
-                .then((resp) => {
-                    if (resp.request?.status !== 200) {
-                        return NotifyError("algo deu errado:" + resp.request?.status);
-                    }
-                    const entidades = resp?.data?.fazes || [];
-                    console.log("Entidades", resp);
-                    setEntidade(entidades);
-                })
-                .catch((err) => {
-                    return NotifyError("algo deu errado:" + err);
-                });
-        } catch (error) {
-            return NotifyError("algo deu errado:" + error);
-        }
-    }
-    const buscarProjectosPorTipo = async ({ tipoId }) => {
-        setLoading(prev => !prev)
-        const c_Projectos = new Projecto()
-        await c_Projectos.buscarProjectosPorTipo({ tipoId }).then((soli) => {
-            setProjectos(prev => soli)
-        });
-        setLoading(prev => !prev)
-    }
-    const buscarProjectosPorVisto = async ({ vistoId }) => {
-        setLoading(prev => !prev)
-        const c_Projectos = new Projecto()
-        await c_Projectos.buscarProjectosPorVisto({ vistoId }).then((soli) => {
-            setProjectos(prev => soli)
-        });
-        setLoading(prev => !prev)
-    }
+    const filteredProcessos = processos?.filter((process) =>
+        process?.processo?.beneficiario?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
+        || process?.processo?.passaporteNumero?.toLowerCase().includes(searchTerm?.toLowerCase())
+        || new Date(process?.processo?.createdAt)?.toLocaleDateString()?.includes(searchTerm?.toLowerCase())
+        || new Date(process?.processo?.createdAt).toLocaleDateString("default", { month: "long" })?.includes(searchTerm?.toLowerCase())
+        || ("Dia " + new Date(process?.processo?.createdAt).getDay()).toLowerCase().includes(searchTerm?.toLowerCase())
+        || process?.processo?.tipoVisto?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
+        || process?.step?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
+    )
 
-    const filteredProjectos = projectos?.filter((projecto) =>
-        projecto?.requerente?.nome.toLowerCase().includes(searchTerm?.toLowerCase())
-    );
+    async function AddVisto(data) {
+        console.log(data);
 
-    console.log("PEDISOS", projectos);
-    const styleDropdown = {};
+        data.processoId = processoId
+        const vistoClass = new Visto()
+        await vistoClass.criar({ data })
+    }
+    function FormVistoAdd() {
+
+
+        return (
+            <CForm onSubmit={handleSubmit(AddVisto)}>
+                <CModalBody>
+                    <CAlert color="secondary">
+
+                    </CAlert>
+                    <CRow className="mb-4">
+                        <CCol>
+                            <CFormInput {...register("numero")} size="sm" placeholder="ex.984P3A" label="Nº do Visto" >
+                            </CFormInput>
+                        </CCol>
+
+                    </CRow >
+                    <CRow className="mb-4">
+                        <CCol>
+                            <CFormInput {...register("dataEmissao")} type="date" size="sm" label="Data de Emissão" >
+                            </CFormInput>
+                        </CCol>
+                        <CCol>
+                            <CFormInput  {...register("dataEntrega")} type="date" size="sm" label="Data de Entrega" >
+                            </CFormInput>
+                        </CCol>
+                    </CRow>
+                    <CRow className="mb-4">
+                        <CCol>
+                            <CFormInput label={"Anexo(pdf/jpeg)"} type="file" size="sm"></CFormInput>
+                        </CCol>
+                    </CRow>
+                    <CRow>
+                        <CCol>
+                            <CFormTextarea {...register("descricao")} size="sm" label="Descrição" placeholder="Escreva aqui.." >
+
+                            </CFormTextarea>
+                        </CCol>
+                    </CRow>
+                </CModalBody>
+
+
+                <CModalFooter>
+                    <CButton color="secondary" onClick={() => setVisibleRegistarVisto(false)}>
+                        Cancelar
+                    </CButton>
+                    {loading ? (
+                        <CSpinner></CSpinner>
+                    ) : (
+                        <CButton type="submit" color="primary">
+                            Enviar
+                        </CButton>
+                    )}
+                </CModalFooter>
+            </CForm>
+
+        )
+    }
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
     return (
         <AppButtonRoot>
+            <Box className="breadcrumb">
+
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
+            <CAlert color="info"> <strong>Nota:</strong><i>Processos com todos estágios finalizados finalizados, Com vistos prontos</i></CAlert>
             <>
                 <CModal
                     alignment="center"
@@ -325,61 +333,56 @@ export default function Listar() {
                     aria-labelledby="VerticallyCenteredExample"
                 >
                     <CModalHeader>
-                        <CModalTitle id="VerticallyCenteredExample">Emissão de Mapa de Solicitações</CModalTitle>
+                        <CModalTitle id="VerticallyCenteredExample">Emissão de Mapa</CModalTitle>
                     </CModalHeader>
-                    <CForm onSubmit={handleSubmit(actualizarStatus)}>
+                    <CForm onSubmit={handleSubmit(gerarMapa)} >
                         <CModalBody>
-                            <div className="d-flex justify-content-center align-items-center " role="group" aria-label="Basic radio toggle button group flex-0">
-                                <CFormSelect onChange={async (event) => await buscarProjectosPorTipo({ tipoId: event.target.value })} style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }}
-                                    id="validationServer05" label="Tipo: ">
-
-                                    <option value={1}>
-                                        Turismo
-                                    </option>
-                                    <option value={2}>
-                                        Trabalho
-                                    </option>
-                                    <option value={3}>
-                                        Curta Duração
-                                    </option>
-                                    <option value={4}>
-                                        Fronteira
-                                    </option>
-                                </CFormSelect>
-                                <CFormSelect style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }}
-                                    id="validationServer06" label="Projecto:">
-                                    <option>
-                                        CLOV3
-                                    </option>
-                                    <option>
-                                        SLGC
-                                    </option>
-                                    <option>
-                                        AGOGO
-                                    </option>
-                                </CFormSelect>
-                                <CFormSelect style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }}
-                                    id="validationServer06" label="Status:">
-                                    <option>
-                                        Aprovados
-                                    </option>
-                                    <option>
-                                        Cancelados
-                                    </option>
-                                    <option>
-                                        Recusados
-                                    </option>
-                                    <option>
-                                        Finalizado
-                                    </option>
-                                </CFormSelect>
-                            </div>
-                            <div className="d-flex justify-content-center align-items-center " role="group" aria-label="Basic radio toggle button group flex-0">
-                                <CFormInput style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }} label={"Desde"} type="date"></CFormInput>
-                                <CFormInput style={{ scale: "0.67", fontSize: "0.74rem", minWidth: "2.45rem" }} label={"Até"} type="date"></CFormInput>
-                            </div>
-
-
+                            <CRow className="mb-4">
+                                <CCol>
+                                    <CFormSelect {...register("tipoVistoId")} defaultValue={1} size="sm"
+                                        id="validationServer05" label="Tipo: ">
+                                        <option value={1}>
+                                            Turismo
+                                        </option>
+                                        <option value={2}>
+                                            Trabalho
+                                        </option>
+                                        <option value={3}>
+                                            Curta Duração
+                                        </option>
+                                        <option value={4}>
+                                            Fronteira
+                                        </option>
+                                    </CFormSelect>
+                                </CCol>
+                            </CRow>
+                            <CRow>
+                                <CCol>
+                                    <CFormSelect defaultValue={new Date().getFullYear().toString()} {...register("year")} size="sm" id="validationServer06" label="Ano">
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2026">2026</option>
+                                        <option value="2027">2027</option>
+                                        <option value="2028">2028</option>
+                                    </CFormSelect>
+                                </CCol>
+                                <CCol>
+                                    <CFormSelect {...register("month")} size="sm" defaultValue={new Date().getMonth() + 1} id="validationServer07" label="Mês">
+                                        <option value="1">Janeiro</option>
+                                        <option value="2">Fevereiro</option>
+                                        <option value="3">Março</option>
+                                        <option value="4">Abril</option>
+                                        <option value="5">Maio</option>
+                                        <option value="6">Junho</option>
+                                        <option value="7">Julho</option>
+                                        <option value="8">Agosto</option>
+                                        <option value="9">Setembro</option>
+                                        <option value="10">Outubro</option>
+                                        <option value="11">Novembro</option>
+                                        <option value="12">Dezembro</option>
+                                    </CFormSelect>
+                                </CCol>
+                            </CRow>
                         </CModalBody>
                         <CModalFooter>
                             <CButton color="secondary" onClick={() => setVisibleMapa(false)}>
@@ -400,227 +403,208 @@ export default function Listar() {
 
                 <CModal
                     alignment="center"
-                    visible={visibleAprovar}
-                    onClose={() => setVisibleAprovar(false)}
+                    visible={visibleRegistarVisto}
+                    onClose={() => setVisibleRegistarVisto(false)}
                     aria-labelledby="VerticallyCenteredExample"
                 >
                     <CModalHeader>
-                        <CModalTitle id="VerticallyCenteredExample">Aprovação de Solicitação</CModalTitle>
+
+                        <CModalTitle id="VerticallyCenteredExample">REGISTO DE VISTO EMITIDO </CModalTitle>
+
                     </CModalHeader>
-                    <CForm onSubmit={handleSubmit(actualizarStatus)}>
-                        <CModalBody>
-                            <CFormTextarea {...register("descricao")}
-                                text={
-                                    <>{errors?.descricao && <p className="text-error">{errors?.descricao?.message}</p>}</>
-                                }
-                            ></CFormTextarea>
-                        </CModalBody>
-                        <CModalFooter>
-                            <CButton color="secondary" onClick={() => setVisibleAprovar(false)}>
-                                Cancelar
-                            </CButton>
-                            {loading ? (
-                                <CSpinner></CSpinner>
-                            ) : (
-                                <CButton type="submit" color="primary">
-                                    Enviar
-                                </CButton>
-                            )}
-                        </CModalFooter>
-                    </CForm>
+                    <Link className="p-4 text-info" to={`/processos/${processoId}/detail`}><strong> PROCESSO Nº </strong>{processoInfo?.processo?.numero}</Link>
+                    <FormVistoAdd></FormVistoAdd>
                 </CModal>
             </>
+            <CAlert color="secondary">
+
+                <CInputGroup className="mt-2" size="sm">
+                    <CInputGroupText size="sm">
+                        <Search color="info" size="sm"></Search>
+                    </CInputGroupText>
+                    <CFormInput
+                        type="text"
+                        size="sm"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        placeholder="beneficiario, passaporte, codigo, visto, data, faze, status"
+                    />
+                </CInputGroup>
+            </CAlert>
 
             <div className="w-100 d-flex  justify-content-between">
-                <strong>Processos Conluídos({totalProjectos})   <Person></Person> </strong>
-                <div>
+                <StyledButton size="small" color="info" variant="text">Todos</StyledButton>
+                <div className="d-flex">
                     <Link
                         onClick={() => {
                             setVisibleMapa(prev => true)
                         }}
                     >
-
-                    </Link>
-
-                    <Link to={`/clientes/${clientId}/projectos/add`}>
-                        <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
-                            Criar Novo <Add></Add>
+                        <StyledButton className="d-flex align-content-center" size="sm" variant="contained" color="info">
+                            IMPRIMIR <Print className="" style={{ marginLeft: "4px" }}></Print>
                         </StyledButton>
+
                     </Link>
+
+
                 </div>
-
             </div>
-
-            <Box pt={4}>{/* <Campaigns /> */}</Box>
-
             <Card elevation={3} sx={{ pt: "10px", mb: 3 }}>
                 <CContainer className="d-flex justify-content-between">
+                    <CForm>
+                        <div className="d-flex w-100" >
+                            <CFormSelect size="sm"
+                                onChange={(event) => { setOrderBy(prev => event.target.value) }}
+                                id="validationServer05"  >
+                                <option value={"nome"} selected>
+                                    Ordenar por
+                                </option>
+
+                                <option value={"createdAt"}>
+                                    Data de Criação
+                                </option>
+                                <option value={"nome"}>
+                                    nome
+                                </option>
+                                <option value={"clienteId"}>
+                                    cliente
+                                </option>
+                            </CFormSelect>
+                            <CFormSelect size="sm"
+                                onChange={(event) => { setOrderBy(prev => event.target.value) }}
+                                id="validationServer05"  >
+                                <option value={"nome"} selected>
+                                    Ordenar por
+                                </option>
+
+                                <option value={"createdAt"}>
+                                    Data de Criação
+                                </option>
+                                <option value={"nome"}>
+                                    nome
+                                </option>
+                                <option value={"clienteId"}>
+                                    cliente
+                                </option>
+                            </CFormSelect>
+                            <CFormInput onChange={(event) => setDate(prev => new Date(event.target.value))} size="sm" type="date"></CFormInput>
+
+                        </div>
+                    </CForm>
+
+                    <CForm>
+                        <div className="d-flex w-100 p-2"  >
+                            <CFormSelect {...register("stepId")} size="sm"
+                                id="validationServer05"  >
+                                <option disabled value={null}>
+                                    Visto
+                                </option>
+                                {vistos?.map((item) => (
+                                    <option value={item?.id}>
+                                        {item?.nome}
+                                    </option>
+                                ))}
+                            </CFormSelect>
+                            <CFormSelect  {...register("stepId")} size="sm"
+                                id="validationServer05"  >
+                                <option disabled value={null}>
+                                    Faze
+                                </option>
+                                {fases?.map((item) => (
+                                    <option value={item?.id}>
+                                        {item?.nome}
+                                    </option>
+                                ))}
+                            </CFormSelect>
+                            <CFormSelect {...register("statusId")} size="sm"
+                                id="validationServer05"  >
+                                <option disabled>
+                                    Status
+                                </option>
+                                {status?.map((item) => (
+                                    <option value={item?.id}>{item?.nome}</option>
+                                ))}
+                            </CFormSelect>
+
+                        </div>
+                    </CForm>
                 </CContainer>
-                <CardHeader className="d-flex justify-content-center align-items-center">
-                    <CInputGroup size="sm">
-                        <CInputGroupText size="sm">
-                            <Search size="sm"></Search>
-                        </CInputGroupText>
-                        <CFormInput
-                            type="text"
-                            size="sm"
-                            value={searchTerm}
-                            onChange={handleSearchChange}
-                            placeholder="Buscar..."
-                        />
-                    </CInputGroup>
-
-                    <div className="d-flex w-100   "  >
-
-                        <CFormSelect size="sm"
-                            id="validationServer05"  >
-                            <option selected>
-                                Ordenar por
-                            </option>
-
-                            <option value={1}>
-                                Data de Criação
-                            </option>
-                            <option value={2}>
-                                nome
-                            </option>
-
-                        </CFormSelect>
-                        <CFormSelect size="sm"
-                            id="validationServer05"  >
-                            <option selected>
-                                Orientação
-                            </option>
-
-                            <option value={1}>
-                                Ascendente
-                            </option>
-                            <option value={2}>
-                                Decrescente
-                            </option>
-
-                        </CFormSelect>
-                        <CFormInput size="sm" type="date"></CFormInput>
-                    </div>
-
-                </CardHeader>
-
                 <Box overflow="auto">
                     <ProductTable>
                         <TableHead>
                             <TableRow>
-
+                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                    Beneficiario
+                                </TableCell>
                                 <TableCell colSpan={2} sx={{ px: 3 }}>
-                                    Id.
+                                    Visto
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
-                                    Nome
+                                    Passaporte
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
-                                    Gestor Interno
+                                    Finalizado Por
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
-                                    Gestor externo
+                                    Dat.Conclusão
                                 </TableCell>
-                                <TableCell colSpan={3} sx={{ px: 2 }}>
-                                    Tot.processos
-                                </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Dat. registo
-                                </TableCell>
-                                <TableCell colSpan={1} sx={{ px: 0 }}>
-                                    Acções
+                                <TableCell colSpan={2} sx={{ px: 2 }}>
+                                    Acção
                                 </TableCell>
                             </TableRow>
                         </TableHead>
 
-                        <TableBody>
+                        <TableBody style={{ overflow: "scroll" }}>
                             {loading ? (
                                 <CSpinner></CSpinner>
                             ) : (
                                 <>
-                                    {filteredProjectos
+                                    {filteredProcessos
                                         ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                        ?.map((projecto, index) => (
+                                        ?.map((processo, index) => (
                                             <TableRow key={index} hover>
 
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={3}>
+                                                    {/* <StyledAvatar src={tecn?.avatar?.url} /> */}
+                                                    <Box display="flex" alignItems="center" gap={3}>
+                                                        <Avatar src={processo?.processo?.beneficiario?.avatar?.url} />
+                                                        <Paragraph style={{ textAlign: "center", fontSize: "0.74rem" }}>   {processo?.processo?.beneficiario?.nome}</Paragraph>
+                                                    </Box>
+                                                </TableCell>
                                                 <TableCell sx={{ px: 3 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{projecto?.numero}</Paragraph>
+                                                    <Paragraph >{VistoBadge({ status: processo?.processo?.tipoVistoId })}</Paragraph>
                                                 </TableCell>
-
-                                                <TableCell
-                                                    colSpan={3}
-                                                    align="left"
-                                                    sx={{ px: 2, textTransform: "capitalize" }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            {projecto?.requerente?.nome}
-                                                        </Paragraph>
-                                                    </Box>
+                                                <TableCell sx={{ px: 2 }} align="left" colSpan={3}>
+                                                    <Paragraph  >{processo?.processo?.passaporteNumero}</Paragraph>
                                                 </TableCell>
-                                                <TableCell
-                                                    colSpan={3}
-                                                    align="left"
-                                                    sx={{ px: 2, textTransform: "capitalize" }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            Sampaio Alberto
-                                                        </Paragraph>
-                                                    </Box>
+                                                <TableCell sx={{ px: 2 }} align="left" colSpan={3}>
+                                                    <Paragraph  >{processo?.responsavel?.nome}</Paragraph>
                                                 </TableCell>
-                                                <TableCell
-                                                    colSpan={3}
-                                                    align="left"
-                                                    sx={{ px: 2, textTransform: "capitalize" }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={2}>
-                                                        <Paragraph style={{ fontSize: fSize }}>
-                                                            exemplo@gmail.com
-                                                        </Paragraph>
-                                                    </Box>
-                                                </TableCell>
-
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        999 999 999
-                                                    </Paragraph>
-
-                                                </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        999 999 999
-                                                    </Paragraph>
-
-                                                </TableCell>
-
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {formatDateDifference(new Date(projecto?.createdAt))}
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={3}  >
+                                                    <Paragraph  >
+                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>{new Date(processo?.updatedAt).toLocaleDateString()}</CBadge>
                                                     </Paragraph>
                                                 </TableCell>
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <CFormSelect
-                                                        style={{ fontSize: "12px", minWidth: "6.45rem" }}
+                                                        style={{ fontSize: "12px", minWidth: "5.45rem" }}
+                                                        size="sm"
                                                         id="validationServer04"
                                                         onChange={async (e) => {
                                                             if (e.target.value == 1) {
-                                                                return goto(
-                                                                    `/projectos/${projecto?.id}/detail`
-                                                                );
+                                                                setVisibleRegistarVisto((prev) => true);
+                                                                handleProcesso({ processo })
                                                             }
                                                             if (e.target.value == 2) {
                                                                 return goto(
-                                                                    `/projectos/${projecto?.passaporte}/edit`
+                                                                    `/processos/${processo?.passaporte}/edit`
                                                                 );
                                                             }
 
                                                             if (e.target.value == 3) {
-                                                                console.log("SOLICI ID", projecto?.id);
-                                                                setPedido(prev => projecto?.id);
+
+                                                                setPedido(prev => processo?.id);
                                                                 setUpdateStatusId(prev => 3);
-                                                                setVisibleAprovar((prev) => true);
 
                                                             }
                                                             if (e.target.value == 4) {
@@ -633,13 +617,9 @@ export default function Listar() {
                                                         sx={0}
                                                     >
                                                         <option>selecione</option>
-                                                        <option value={1}>visualisar</option>
-                                                        <option value={2}>Editar</option>
-
-
+                                                        <option value={1}>Registar Visto</option>
                                                     </CFormSelect>
                                                 </TableCell>
-
                                             </TableRow>
                                         ))}
                                 </>
@@ -651,7 +631,7 @@ export default function Listar() {
                         page={page}
                         component="div"
                         rowsPerPage={rowsPerPage}
-                        count={projectos?.length}
+                        count={processos?.length}
                         onPageChange={handleChangePage}
                         rowsPerPageOptions={[5, 10, 25]}
                         onRowsPerPageChange={handleChangeRowsPerPage}
@@ -661,6 +641,6 @@ export default function Listar() {
                 </Box>
                 <Box pt={3}></Box>
             </Card>
-        </AppButtonRoot>
+        </AppButtonRoot >
     );
 }

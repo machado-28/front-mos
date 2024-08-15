@@ -315,7 +315,7 @@ export default function Listar() {
           aria-labelledby="VerticallyCenteredExample"
         >
           <CModalHeader>
-            <CModalTitle id="VerticallyCenteredExample">EMISSÃO DE MAPA DE VISTO</CModalTitle>
+            <CModalTitle id="VerticallyCenteredExample">EMISSÃO DE MAPA DEggg VISTO</CModalTitle>
           </CModalHeader>
           <CForm onSubmit={handleSubmit(actualizarStatus)}>
             <CModalBody>

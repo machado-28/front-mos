@@ -46,16 +46,20 @@ class Gestores {
         return gestores
     }
     async criar({ data }) {
-        const api = useApi()
-        const message = await api.add(`gestores`, data).then((resp) => {
-            console.table("%cGestores", "font-size:xx-large; color: blue", resp?.data?.gestores);
+        try {
+            const api = useApi()
+            const message = await api.add(`gestores`, data).then((resp) => {
 
-            return resp?.data?.message
-        }).catch((error) => {
-            console.log(error);
-            NotifyError("erro insperdo ");
-        })
-        return message
+                if (resp.status === 201) {
+                    window.location.reload()
+                }
+                return resp
+            })
+
+            return message
+        } catch (error) {
+            NotifyError("erro insperdo ", error);
+        }
     }
 
 }

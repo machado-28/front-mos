@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Checkbox, FormControlLabel, FormGroup, TextField, Typography } from "@mui/material";
 import { Breadcrumb, SimpleCard } from "app/components";
 import React, { useEffect } from "react";
 import { H1, H2, H3, Paragraph } from "app/components/Typography";
@@ -6,9 +6,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFilterOptions } from "@mui/material/Autocomplete";
+// import Select from "react-select"
 import { Email, Folder, Password, Phone, Title } from "@mui/icons-material";
 
 import {
+    CAlert,
     CButton,
     CCard,
     CCardBody,
@@ -31,7 +33,7 @@ import {
 } from "@coreui/react";
 import { useApi } from "app/hooks/useApi";
 import { AppButtonRoot } from "app/components/AppBuutonRoot";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { functions, min, values } from "lodash";
 import { Bounce, toast } from "react-toastify";
 import { listaPais } from "app/utils/paises";
@@ -49,7 +51,10 @@ import useAuth from "app/hooks/useAuth";
 import { Gestores } from "app/views/Clientes/Gestores/util";
 import { Projecto } from "../util";
 import { Cliente } from "app/views/Clientes/util";
-
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
+import { sendMessage } from "app/hooks/socket";
+import useNotification from "app/hooks/useNotification";
+import "./style.css"
 export default function FormAdd() {
     const validadeDate = new ValidateData().byInterval;
     const seisMesesNoFuturo = validadeDate({ date: new Date(), interval: 6 });
@@ -64,10 +69,8 @@ export default function FormAdd() {
                 },
                 { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
             ),
-        gestorInternoId: z.string(),
-
-
-        gestorExternoId: z.string(),
+        gestoresInternoIds: z.array(z.coerce.number()).min(2, 'Selecione pelo menos dois gestores'),
+        gestoresExternoIds: z.array(z.coerce.number()).min(2, 'Selecione pelo menos dois gestores'),
         clienteId: z.string().min(1),
 
 
@@ -82,7 +85,8 @@ export default function FormAdd() {
     } = useForm({
         resolver: zodResolver(addProcessoShema),
         shouldFocusError: true,
-        progressive: true
+        progressive: true,
+        defaultValues: {}
     });
 
     if (errors) console.log("ERRO", errors);
@@ -96,174 +100,269 @@ export default function FormAdd() {
     const Gestor = new Gestores();
 
     async function buscarGestores(params) {
-        const interno = await Gestor.buscarTodos({ clienteId, painelId: 6 });
-        const externo = await Gestor.buscarTodos({ clienteId: clienteIdSelectedt, painelId: 5 });
+        const externo = await Gestor.buscarTodos({ clienteId: clienteIdSelected, painelId: 5 });
         setgestorExterno(prev => externo);
-        setgestorInterno(prev => user?.painel?.nome === "CLIENTE" ? [] : interno)
+
+    }
+
+    async function buscarGestorInterno(params) {
+        const interno = await Gestor.buscarTodos({ painelId: 6 });
+        console.log("INTERNOS", interno);
+        setgestorInterno(prev => interno)
+
+
     }
 
     function handleChangeCliente(event) {
         setClienteId(prev => event?.target?.value);
-        console.log("CHANGE CLIENTE", clienteIdSelectedt);
+        console.log("CHANGE CLIENTE", clienteIdSelected);
     }
 
     const cliente = new Cliente();
     const [clientes, setClientes] = useState([]);
-    const [clienteIdSelectedt, setClienteId] = useState();
+    const [clienteIdSelected, setClienteId] = useState(1);
 
     async function buscarClientes(params) {
         const res = await cliente.buscarClientes();
         setClientes(prev => res)
     }
-    useEffect(() => {
-        buscarClientes();
+    const { createNotification } = useNotification({
 
-    }, []);
-    useEffect(() => {
-        if (clienteIdSelectedt) {
-            buscarGestores();
-        }
+    })
 
-    }, [clienteIdSelectedt]);
+    const [selectedGestoresInterno, setSelectedGestoresInterno] = useState([]);
+    const handleCheckboxChangeGestoresInterno = (event) => {
+        console.log("ESCOLHDOS i", selectedGestoresInterno);
+        const personId = parseInt(event.target.value, 10);
+        setSelectedGestoresInterno((prevSelected) =>
+            prevSelected.includes(personId)
+                ? prevSelected.filter((id) => id !== personId)
+                : [...prevSelected, personId]
+        );
+    };
 
-    console.log("gestor externo", gestorExterno);
-
-
-    const projecto = new Projecto
-    console.log("ID", clienteIdSelectedt);
-    async function PostData(dados) {
-
+    const [selectedGestoresExterno, setSelectedGestoresExterno] = useState([]);
+    const handleCheckboxChangeGestoresExterno = (event) => {
         try {
 
+            console.log("ESCOLHDOS i", selectedGestoresInterno);
+            const personId = parseInt(event.target.value, 10);
+            setSelectedGestoresExterno((prevSelected) =>
+                prevSelected.includes(personId)
+                    ? prevSelected.filter((id) => id !== personId)
+                    : [...prevSelected, personId]
+            );
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const projecto = new Projecto
+    console.log("ID", clienteIdSelected);
+
+    async function PostData(dados) {
+        try {
             console.log("FORMULARIO ", dados);
             setLoading(true);
             const response = await projecto.criar(dados).then(async (response) => {
+                if (!response?.data?.message)
+                    return;
+                if (response?.data?.message) {
+                    Notify(response?.data?.message);
+                    createNotification({
+                        heading: "Novo Projeto",
+                        title: `Projeto ${dados.nome} criado com sucesso`,
+                        timestamp: Date.now(),
+                        path: "/path-to-project",
+                    });
+                    Notify(response?.data?.message);
+                }
                 setLoading(false);
-                Notify(response?.data?.message);
+                reset()
+                console.log("LOGINFFFFFFFF", response?.data?.message);
+                reset()
+                setSelectedGestoresExterno([])
+                selectedGestoresInterno([])
 
             });
-
+            reset()
         } catch (error) {
-            NotifyError("Älgo deu Errado");
-            console.log(error);
+            NotifyError(error?.TypeError);
+            console.log("LOG ERRO", error);
+            setLoading(false);
+
+        }
+        finally {
+            reset({})
+            setSelectedGestoresExterno([])
+            setSelectedGestoresInterno([])
             setLoading(false);
 
         }
     }
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
+
+    const handleGestoresChange = (e) => {
+        const value = Array.from(e.target.selectedOptions, option => option.value);
+        setSelectedGestores(value);
+    };
+
+    useEffect(() => {
+        if (gestorInterno) {
+            buscarGestorInterno();
+        }
+
+        if (gestorExterno) {
+            buscarGestores();
+        }
+        sendMessage("register", "CRIANDO PROJECTO")
+    }, [clienteIdSelected]);
+    useEffect(() => {
+
+        buscarClientes();
+        if (clienteIdSelected) {
+            setSelectedGestoresExterno([])
+        }
+
+
+    }, [clienteIdSelected]);
 
     const styleInput = {};
     return (
         <CForm onSubmit={handleSubmit(PostData)} style={{ borderRadius: "none" }}>
-            <Box pt={4}></Box>
-            <div className="w-100 d-flex  justify-content-between">
-                <H2>Cadastro de Projecto   <Folder></Folder> </H2>
-                <div>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
+            <CAlert color="secondary">
+                <div className="w-100 d-flex  justify-content-between">
+                    <H2>Cadastro de Projecto   <Folder></Folder> </H2>
+                    <div>
 
-                    <LoadingButton
-                        className="text-white px-4 "
-                        color="success"
-                        type="submit"
-                        loading={loading}
-                        variant="contained"
+                        <LoadingButton
+                            className="text-white px-4 "
+                            color="success"
+                            type="submit"
+                            loading={loading}
+                            variant="contained"
 
-                    >
-                        Salvar
-                    </LoadingButton>
+                        >
+                            Salvar
+                        </LoadingButton>
+                    </div>
+
                 </div>
-
-            </div>
-
+            </CAlert>
             <Box pt={3}></Box>
-            <CRow className="mb-4">
-                <CCol>
-                    <CFormSelect
-                        label="Clientegg"
-                        size="sm"
+            <SimpleCard>
+                <CRow className="mb-4">
+                    <CCol>
+                        <CFormInput
+                            size="sm"
+                            type="text"
+                            label="Nome do projecto"
 
-                        aria-describedby="exampleFormControlInputHelpInline"
-                        text={
-                            errors.clienteId && (
-                                <div className="text-light bg-danger">{errors.clienteId.message}</div>
-                            )
-                        }   {...register("clienteId")}
-                        // disabled={user?.painel?.nome === "CLIENTE" && true}
-                        onChange={handleChangeCliente}
+                            aria-label="Antonio Machado"
+                            aria-describedby="exampleFormControlInputHelpInline"
+                            text={
+                                errors.nome && <div className="text-light bg-danger">{errors.nome.message}</div>
+                            }
+                            {...register("nome")}
+                        />
+                    </CCol>
+                    <CCol>
+                        <CFormSelect
+                            label="Cliente"
+                            size="sm"
 
-                    > <option disabled>selecione o cliente</option>
+                            aria-describedby="exampleFormControlInputHelpInline"
+                            text={
+                                errors.clienteId && (
+                                    <div className="text-light bg-danger">{errors.clienteId.message}</div>
+                                )
+                            }   {...register("clienteId")}
+                            // disabled={user?.painel?.nome === "CLIENTE" && true}
+                            onChange={handleChangeCliente}
 
-                        {clientes?.map((clien) => (
-                            <option value={clien?.id} key={clien?.id}>
-                                {clien?.nome}
-                            </option>
-                        ))}
-                    </CFormSelect>
-                </CCol>
+                        > <option disabled>selecione o cliente</option>
 
-                <CCol>
-                    <CFormInput
-                        size="sm"
-                        type="text"
-                        label="Nome do projecto"
+                            {clientes?.map((clien) => (
+                                <option value={clien?.id} key={clien?.id}>
+                                    {clien?.nome}
+                                </option>
+                            ))}
+                        </CFormSelect>
+                    </CCol>
+                </CRow>
+            </SimpleCard>
+            <CRow className="mb-4 mt-4 w-100 d-flex" style={{ overflow: "auto" }}>
+                <CCol md={6}  >
 
-                        aria-label="Antonio Machado"
-                        aria-describedby="exampleFormControlInputHelpInline"
-                        text={
-                            errors.nome && <div className="text-light bg-danger">{errors.nome.message}</div>
-                        }
-                        {...register("nome")}
-                    />
-                </CCol>
+                    <SimpleCard className=" custom-scrollbar">
+                        <Typography variant="h6">Selecione Os gestores externos(Cliente)</Typography>
+                        {errors.gestoresExternoIds && (
+                            <div className="text-light bg-danger">{errors.gestoresExternoIds.message}</div>
+                        )}
+                        <FormGroup>
+                            {gestorExterno?.map((gestor) => (
+                                <FormControlLabel
+                                    key={gestor?.id}
 
-            </CRow>
-            <CRow className="mb-4">
-                <CCol>
-                    <CFormSelect
-                        label="Gestor 1s"
-                        size="sm"
+                                    control={
+                                        <Checkbox
 
-                        aria-describedby="exampleFormControlInputHelpInline"
-                        text={
-                            errors.gestorInternoId && (
-                                <div className="text-light bg-danger">{errors.gestorInternoId.message}</div>
-                            )
-                        }
-                        // disabled={user?.painel?.nome === "CLIENTE" && true}
-                        readOnly={user?.painel?.nome === "CLIENTE" && true}
+                                            value={gestor?.id}
+                                            checked={selectedGestoresExterno.includes(gestor?.id)}
+                                            {...register("gestoresExternoIds")}
+                                            onChange={handleCheckboxChangeGestoresExterno}
 
-                        defaultValue={undefined}
-                        {...register("gestorInternoId")}
-                    > <option value={""} selected>selecione o gestor 1</option>
+                                        />
+                                    }
+                                    label={gestor?.nome}
+                                />
+                            ))}
+                        </FormGroup>
 
-                        {gestorInterno?.map((client) => (
-                            <option value={client?.id} key={client?.id + "12"}>
-                                {client?.nome}
-                            </option>
-                        ))}
-                    </CFormSelect>
-                </CCol>
-                <CCol>
 
-                    <CFormSelect
-                        label="Gestor 2"
-                        aria-describedby="exampleFormControlInputHelpInline"
-                        text={
-                            errors.gestorExternoId && (
-                                <div className="text-light bg-danger">{errors.gestorExternoId.message}</div>
-                            )
-                        }
-                        size="sm"
-                        required
-                        {...register("gestorExternoId")}
-                    >
-                        <option value={null}>selecione o gestor 2</option>
-                        {gestorExterno?.map((gest) => (
-                            <option value={gest?.id} key={gest?.nome}>
-                                {gest?.nome}
-                            </option>
-                        ))}
-                    </CFormSelect>
+                    </SimpleCard>
 
                 </CCol>
+                <CCol md={6} >
+
+                    <SimpleCard className=" custom-scrollbar">
+                        <Typography variant="h6">Selecione Os gestores Internos(Metalica)</Typography>
+                        {errors.gestoresInternoIds && (
+                            <div className="text-light bg-danger">{errors.gestoresInternoIds.message}</div>
+                        )}
+                        <FormGroup>
+                            {gestorInterno?.map((gestor) => (
+                                <FormControlLabel
+                                    key={gestor?.id}
+                                    control={
+                                        <Checkbox
+                                            text={
+                                                errors.gestoresInternoIds && (
+                                                    <div className="text-light bg-danger">{errors.gestoresInternoIds.message}</div>
+                                                )
+                                            }   {...register("gestoresInternoIds")}
+                                            value={gestor?.id}
+                                            checked={selectedGestoresInterno.includes(gestor?.id)}
+                                            {...register('gestoresInternoIds')}
+                                            onChange={handleCheckboxChangeGestoresInterno}
+
+                                        />
+                                    }
+                                    label={gestor?.nome}
+                                />
+                            ))}
+                        </FormGroup>
+
+                    </SimpleCard>
+
+                </CCol>
+
             </CRow>
         </CForm >
     );

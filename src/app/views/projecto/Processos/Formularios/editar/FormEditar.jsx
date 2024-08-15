@@ -60,7 +60,7 @@ export default function FormEditar() {
         },
         { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
       ),
-    sindicato: z
+    consulado: z
       .string()
       .regex(validatePersonNames, "incorrecto")
       .refine(
@@ -294,6 +294,8 @@ export default function FormEditar() {
         const { data } = response
         console.log("RESPOSTA SUCESSO", response);
         setLoading(false);
+        if (!response?.data?.message)
+          return;
         Notify(response?.data?.message);
         window.location.reload();
       });
@@ -337,7 +339,7 @@ export default function FormEditar() {
               type="text"
               label="Nome Completo"
               aria-label="Antonio Machado"
-              
+
               aria-describedby="exampleFormControlInputHelpInline"
               text={
                 errors.nome && <div className="text-light bg-danger">{errors.nome.message}</div>
@@ -416,15 +418,15 @@ export default function FormEditar() {
           <CCol>
             <CFormInput
               type="text"
-              label="Sindicato"
+              label="  consulado"
               aria-label=" "
               aria-describedby="exampleFormControlInputHelpInline"
               text={
-                errors.sindicato && (
-                  <div className="text-light bg-danger">{errors.sindicato.message}</div>
+                errors.consulado && (
+                  <div className="text-light bg-danger">{errors.consulado.message}</div>
                 )
               }
-              {...register("sindicato")}
+              {...register("  consulado")}
             />
           </CCol>
         </CRow>

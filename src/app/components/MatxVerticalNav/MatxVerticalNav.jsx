@@ -80,7 +80,7 @@ export default function MatxVerticalNav({ items }) {
   const { mode } = settings.layout1Settings.leftSidebar;
 
   const renderLevels = (data) => {
-    return data.map((item, index) => {
+    return data?.map((item, index) => {
       if (item.type === "label")
         return (
           <ListLabel key={index} mode={mode} className="sidenavHoverShow">

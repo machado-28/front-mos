@@ -27,7 +27,7 @@ export default function Add() {
         <AppButtonRoot>
             <div className="example">
 
-                <Box pt={1}>{/* <Campaigns /> */}</Box>
+
                 <FormAdd></FormAdd>
             </div>
         </AppButtonRoot>

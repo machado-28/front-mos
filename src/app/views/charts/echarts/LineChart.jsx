@@ -22,13 +22,13 @@ export default function LineChart({ height, color = [] }) {
     },
     xAxis: {
       type: "category",
-      data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      axisLine: { show: false },
+      data: [ "Sun","Seg", "Ter", "Qua", "Qui", "Sex", "Sáb",],
+      axisLine: { show: true },
       axisTick: { show: false },
       axisLabel: {
         fontSize: 14,
         fontFamily: "roboto",
-        color: theme.palette.text.secondary
+        color:"warning"
       }
     },
     yAxis: {
@@ -36,7 +36,7 @@ export default function LineChart({ height, color = [] }) {
       axisLine: { show: false },
       axisTick: { show: false },
       splitLine: {
-        lineStyle: { color: theme.palette.text.secondary, opacity: 0.15 }
+        lineStyle: { color:"warning", opacity: 0.15 }
       },
       axisLabel: { color: theme.palette.text.secondary, fontSize: 13, fontFamily: "roboto" }
     },
@@ -44,17 +44,17 @@ export default function LineChart({ height, color = [] }) {
       {
         data: [30, 40, 20, 50, 40, 80, 90],
         type: "line",
-        stack: "This month",
-        name: "This month",
+        stack: "Este Mês",
+        name: "Este Mês",
         smooth: true,
         symbolSize: 4,
         lineStyle: { width: 4 }
       },
       {
-        data: [20, 50, 15, 50, 30, 70, 95],
+        data: [0, 50, 15, 50, 30, 70, 95],
         type: "line",
-        stack: "Last month",
-        name: "Last month",
+        stack: "Mês Passado",
+        name: "Mês Passado",
         smooth: true,
         symbolSize: 4,
         lineStyle: { width: 4 }

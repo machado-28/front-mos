@@ -639,7 +639,7 @@ export default function ListarPersonalizado() {
                                                         sx={0}
                                                     >
                                                         <option>selecione</option>
-                                                        <option value={1}>visualisar</option>
+                                                        <option value={1}>ver processos</option>
                                                         <option value={2}>Editar</option>
 
 

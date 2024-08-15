@@ -9,6 +9,7 @@ const api = axios.create({
 // Adiciona um interceptador de solicitação
 api.interceptors.request.use(
   (config) => {
+    s
     const { token } = localStorage.getItem("user");
     console.log(token);
     // Se houver um token no localStorage, adiciona ao cabeçalho Authorization

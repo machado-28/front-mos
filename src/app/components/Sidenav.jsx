@@ -4,7 +4,7 @@ import Scrollbar from "react-perfect-scrollbar";
 
 import { MatxVerticalNav } from "app/components";
 import useSettings from "app/hooks/useSettings";
-import { AdminNavigations, AdminProjectoNavigations, ClienteNavigations, GestorProjectoExternoNavigations, GestorProjectoNavigations, GestorVistoNavigations, RhNavigations, SecretariaNavigations, TecnicoProcessoNavigations, VisualizadorNavigations } from "app/navigations";
+import { AdminNavigations, AdminProjectoNavigations, ClienteNavigations, GestorProjectoClienteNavigations, GestorProjectoNavigations, GestorVistoNavigations, RhNavigations, SecretariaNavigations, TecnicoProcessoNavigations, VisualizadorNavigations } from "app/navigations";
 import useAuth from "app/hooks/useAuth";
 
 // STYLED COMPONENTS
@@ -39,7 +39,7 @@ export default function Sidenav({ children }) {
 
       case "TECNICO DE PROCESSO": return TecnicoProcessoNavigations;
       case "CLIENTE": return ClienteNavigations;
-      case "GESTOR DE PROJECTO EXTERNO": return GestorProjectoExternoNavigations;
+      case "GESTOR DE PROJECTO CLIENTE": return GestorProjectoClienteNavigations;
       case "VISUALISADOR": return VisualizadorNavigations
       case "SECRETARIA": return SecretariaNavigations
 

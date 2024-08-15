@@ -1,9 +1,9 @@
 import axios from "axios";
 import { Notify, NotifyError } from "app/utils/toastyNotification";
 import { useNavigate } from "react-router-dom";
-
-const api = axios.create({
-  baseURL: "http://localhost:4000/v1/"
+//  "https://api.mos.ao/v1/"
+export const api = axios.create({
+  baseURL: "https://api.mos.ao/v1/"
 });
 
 // Adiciona um interceptador de solicitação
@@ -17,7 +17,6 @@ api.interceptors.request.use(
     // if (window.location.pathname === "/session/signin") {
     //   return config;
     // }
-
     // Se houver um token no localStorage, adiciona ao cabeçalho Authorization
     if (user) {
       console.log("TOKEN recebido", user?.token);
@@ -45,25 +44,45 @@ export const useApi = () => ({
         const { user } = resp?.data;
 
         localStorage.setItem("user", JSON.stringify(user));
-        console.log("logou mesmo", resp);
+        
         return resp;
       }
 
-      console.log("SEJA UTIL", resp);
-      return resp;
+     
     } catch (error) {
       console.log("erro=>", error);
       return error?.response;
     }
   },
   listQuery: async (path) => {
-    const response = await api
-      .get(`/${path}`)
-      .then((response) => response || response)
-      .catch(({ response }) => response);
-    console.log("RESPONSE", response);
-
-    return response;
+    try {
+      const response = await api
+        .get(`/${path}`)
+        .then((response) => response || response)
+        .catch(({ response }) => response);
+      
+      if (response.status === 404 || response.status === 403 || response.status === 400 || response.status === 401 || response.status === 402) {
+        console.log(response?.message);
+      }
+      return response;
+    } catch (error) {
+      console.log(response?.message);
+    }
+  },
+  getPerfil: async (path) => {
+    try {
+      const response = await api
+        .get(`/${path}`)
+        .then((response) => response || response)
+        .catch(({ response }) => response);
+      console.log("RESPONSE", response);
+      if (response.status === 404 || response.status === 403 || response.status === 400 || response.status === 401 || response.status === 402) {
+        console.log("response");
+      }
+      return response;
+    } catch (error) {
+      console.log("erro inesperado:", error);
+    }
   },
   sair: async () => {
     try {
@@ -74,103 +93,155 @@ export const useApi = () => ({
       throw error;
     }
   },
-  add: async (path, data) => {
-    const response = await api
-      .post(`/${path}`, data)
-      .then((response) => response || response)
-      .catch(({ response }) => response);
-    console.log("RESPONSE", response);
 
-    return response;
+  add: async (path, data) => {
+    try {
+      const response = await api
+        .post(`/${path}`, data)
+        .then((response) => response || response)
+        .catch(({ response }) => response);
+      console.log("RESPONSE", response);
+
+      return response;
+    } catch (error) {
+      NotifyError("erro inesperado:", error);
+    }
   },
   documento: async (path, title = "MAPA DE CONTROLO") => {
-    const response = await api.get(path, {
-      responseType: "blob" // Indica que esperamos uma resposta de arquivo binário (blob)
-    });
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
+    try {
+      const response = await api.get(path, {
+        responseType: "blob" // Indica que esperamos uma resposta de arquivo binário (blob)
+      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
 
-    link.setAttribute("target", "blank");
-    document.body.appendChild(link);
-    link.click();
-    link.title = title
-    link.remove();
+      link.setAttribute("target", "blank");
+      document.body.appendChild(link);
+      link.click();
+      link.title = title
+      link.remove();
+    } catch (error) {
+      NotifyError("erro inesperado:", error);
+    }
   },
   edit: async (path, data) => {
-    const response = await api
-      .put(`/${path}/`, data)
-      .then((response) => response || response)
-      .catch(({ response }) => response);
-    if (response.status === 403 || response.status === 400 || response.status === 401 || response.status === 402) {
-      NotifyError(response?.message);
-      return
-    }
+    try {
+      const response = await api.put(`/${path}/`, data);
 
-    return response;
-  },
+      if (response.status !== 200 && response.status !== 201) {
+        NotifyError(response?.data?.message);
+        return {};
+      }
+
+      Notify(response.data.message);
+      return response;
+    } catch (error) {
+      if (error.response) {
+        NotifyError(error.response?.data?.message || "Erro inesperado ao fazer a solicitação.");
+        return error.response;
+      } else {
+        NotifyError("Erro inesperado:", error);
+      }
+    }
+  }
+  ,
   editOne: async (path, data) => {
-    const response = await api
-      .patch(`/${path}/`, data)
-      .then((response) => response || response)
-      .catch(({ response }) => response);
-    console.log("RESPONSE", response);
-
-    return response;
-  },
-  editQuery: async (path, data) => {
-    const response = await api
-      .put(`/${path}`, data)
-      .then((response) => response || response)
-      .catch(({ response }) => response);
-
-    if (response.status === 403 || response.status === 400 || response.status === 401 || response.status === 402) {
-      NotifyError(response?.message);
-      return
+    try {
+      const response = await api.patch(`/${path}/`, data);
+      console.log(`Edit successful: ${path}`, response);
+      return response.data; // return only the response data
+    } catch (error) {
+      console.error(`Error editing ${path}:`, error.response);
+      throw error; // rethrow the error to allow for proper error handling
     }
-    return response;
-  },
+  }
+  ,
+  editQuery: async (path, data) => {
+    try {
+      const response = await api.put(`/${path}`, data);
+
+      if ([400, 401, 402, 403].includes(response.status)) {
+        NotifyError(response?.message);
+        return;
+      }
+
+      return response;
+    } catch (error) {
+      const response = error.response;
+      if ([400, 401, 402, 403].includes(response?.status)) {
+        NotifyError(response?.message);
+      } else {
+        NotifyError("Erro inesperado:", error);
+      }
+      return response;
+    }
+  }
+  ,
   delete: async (path, id) => {
     console.log("outro", id);
-    const response = await api
-      .delete(`/${path}/${id}`)
-      .then((response) => response || response)
-      .catch(({ response }) => response);
+    try {
+      const response = await api.delete(`/${path}/${id}`);
 
-    if (response.status === 403 || response.status === 400 || response.status === 401 || response.status === 402) {
-      NotifyError(response?.message);
-      return
+      if ([400, 401, 402, 403].includes(response.status)) {
+        NotifyError(response?.message);
+        return;
+      }
+
+      return response;
+    } catch (error) {
+      const response = error.response;
+      if ([400, 401, 402, 403].includes(response?.status)) {
+        NotifyError(response?.message);
+      } else {
+        NotifyError("Erro inesperado:", error);
+      }
+      return response;
     }
-    return response;
-  }, // Outros métodos aqui...
+  }
+  ,
+  // Outros métodos aqui...
   list: async (path, page = 1) => {
-    const response = await api
-      .get(`/${path}/?page=${page}`)
-      .then((response) => response || response)
-      .catch(({ response }) => response);
+    try {
+      const response = await api.get(`/${path}/?page=${page}`);
 
-    if (response.status === 403 || response.status === 400 || response.status === 401 || response.status === 402) {
-      NotifyError(response?.message);
-      return
+      if ([400, 401, 402, 403].includes(response.status)) {
+        console.log(response?.message);
+
+        return;
+      }
+
+      return response;
+    } catch (error) {
+      const response = error.response;
+      if ([400, 401, 402, 403].includes(response?.status)) {
+        console.log(response?.message);
+      } else {
+        console.log(response?.message);
+      }
+      return response;
     }
-    return response;
   },
 
   add: async (path, data) => {
     try {
       const response = await api.post(`/${path}`, data);
-      console.log("API resp", response);
-      if (response.status === 403 || response.status === 400 || response.status === 401 || response.status === 402) {
+      console.log("CADASTRAMENTO ", response);
+
+      if ([400, 401, 402, 403].includes(response.status)) {
         NotifyError(response?.message);
-        return
+        return response;
       }
 
+      Notify(response?.data?.message);
       return response;
     } catch (error) {
-      console.log("%cERRO", "color: red; font-size:xx-large", error?.response?.data?.message);
-
-      NotifyError(error?.response?.data?.message)
+      const errorMessage = error?.response?.data?.message || "Erro inesperado";
+      console.log(error)
+      console.log("%cERRO", "color: red; font-size:xx-large", errorMessage);
+      NotifyError(errorMessage);
+      return error?.response?.data;
     }
   }
 

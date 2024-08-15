@@ -1,3 +1,5 @@
+import { differenceInDays } from "date-fns";
+
 export const validatePassporte = /^\w{3}\d{6}$/;
 
 export const validatePersonNames =
@@ -10,9 +12,9 @@ export const validatePersonNames =
 // Não pode começar ou terminar com um espaço em branco.
 // Não pode conter caracteres especiais como números, símbolos ou caracteres de pontuação (exceto o apóstrofo para nomes como O'Connor, por exemplo).
 export function adicionarMeses(data, meses) {
-    var novaData = new Date(data);
-    novaData.setMonth(novaData.getMonth() + meses);
-    return novaData;
+  var novaData = new Date(data);
+  novaData.setMonth(novaData.getMonth() + meses);
+  return novaData;
 }
 
 // Exemplo de uso:
@@ -48,7 +50,18 @@ export function calcularIdade(dataNascimento) {
 export function capitalize(str) {
   return str.toLowerCase().replace(/^\w|\s\w/g, (letter) => letter.toUpperCase());
 }
+export const calculateTimeDifference = (startDate, endDate) => {
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  const difference = end - start;
 
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+  return { days, hours, minutes, seconds };
+};
 export function formatDateDifference(date) {
   const now = new Date();
   const diff = Math.floor((now - date) / (1000 * 60)); // Diferença em minutos
@@ -68,4 +81,20 @@ export function formatDateDifference(date) {
   } else {
     return date.toLocaleDateString("pt-BR"); // Se for mais antigo, mostra a data completa
   }
+}
+
+
+export function calcularDiasDecorrido(dataInicio, dataFinal) {
+  // Cria instâncias de Date para as datas fornecidas
+  const inicio = new Date(dataInicio).toLocaleDateString();
+  const final = new Date(dataFinal).toLocaleDateString();
+
+  // Calcula a diferença em milissegundos
+
+
+  // Converte a diferença para dias (milissegundos em um dia: 24*60*60*1000)
+  const dias = differenceInDays(inicio, final)
+  console.log("DIAS DECORRIDO", dias, inicio, final);
+
+  return dias;
 }

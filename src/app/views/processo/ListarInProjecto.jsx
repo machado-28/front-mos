@@ -1,4 +1,5 @@
 import {
+    CAlert,
     CAvatar,
     CBadge,
     CButton,
@@ -26,6 +27,7 @@ import {
     Download,
     DownloadOutlined,
     FolderCopySharp,
+    GroupOutlined,
     Image,
     Person,
     PlusOne,
@@ -54,7 +56,7 @@ import {
 import { Paragraph } from "app/components/Typography";
 import { useApi } from "app/hooks/useApi";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import "./style.css";
 // import { ChartLine } from "./ChartLine";
 import { NotifyError } from "app/utils/toastyNotification";
@@ -68,6 +70,10 @@ import { useForm } from "react-hook-form";
 import Add from "@mui/icons-material/Add";
 import { LoadingButton } from "@mui/lab";
 import Processo from "./util";
+import useAuth from "app/hooks/useAuth";
+import { Breadcrumb } from "app/components";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
+import ListarEmProjecto from "../projecto/Gestores/ListarNoProjecto";
 
 // STYLED COMPONENTS
 const CardHeader = styled(Box)(() => ({
@@ -142,6 +148,8 @@ export default function Listar() {
         shouldFocusError: true,
         progressive: true
     });
+
+    const { user } = useAuth()
     const { palette } = useTheme();
     const bgError = palette.error.main;
     const bgPrimary = palette.primary.main;
@@ -158,11 +166,10 @@ export default function Listar() {
         setPage(newPage);
     };
     const api = useApi();
-
-
-
+    const [vistos, setVistos] = useState([{ nome: "Turismo" }, { nome: "Trabalho" }]);
+    const [status, setStatus] = useState([{ nome: "pendente" }])
+    const [fases, setFazes] = useState([{ nome: "Legalização" }])
     const [filtroStatus, setFiltroStatus] = useState(0);
-
     function handleFiltroStatus(e) {
         setFiltroStatus((prev) => e);
     }
@@ -176,25 +183,18 @@ export default function Listar() {
         margin: theme.spacing(1)
     }));
 
-
     const { clienteId, projectoId } = useParams()
     const [projectoData, setProjectoData] = useState({})
-
     console.log("PARAMS NEW", useParams());
-
     const projecto = new Projecto();
     async function buscarProjecto() {
         const res = await projecto.buscar({ id: projectoId, order, orderBy });
-
         setProjectoData(prev => res[0])
-
     }
-    const { passaporte: clientId = 1 } = useParams()
-    // let clientId=1
+
     const [loading, setLoading] = useState(false);
     const [processos, setProcessos] = useState([]);
     const [totalProcessos, setTotalProcessos] = useState(0);
-
 
     const [visibleAprovar, setVisibleAprovar] = useState(false);
     const gerarMapa = async (data) => {
@@ -203,18 +203,14 @@ export default function Listar() {
         await processo.gerarMapa({ data, projectoId })
         setLoading(prev => false)
     }
-
     const buscarProcesso = async (data) => {
         setLoading(prev => true)
         const processo = new Processo();
-        const res = await processo.progresso({ projectoId })
-        setProcessos(prev => res.progresso)
+        const res = await processo?.buscar({ projectoId })
         setLoading(prev => false)
-        console.log("PROGRESSO", res.progresso);
-
+        console.log("DATA PROCESSO", res);
+        setProcessos(prev => res?.processos)
     }
-
-
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(+event.target.value);
         setPage(0);
@@ -222,14 +218,33 @@ export default function Listar() {
     useEffect(() => {
         buscarProjecto();
         buscarProcesso()
-    }, [])
+    }, []);
+    const [loadingDelegar, setLoadingDelegar] = useState(false);
+    const [processoId, setProcessoId] = useState();
+    const [visibleTarefa, setVisibleTarefa] = useState(false);
+    function handleProcessoId({ id }) {
+        console.log("PROCESOO ID", id);
+        setProcessoId(prev => id)
+    }
+    async function handleDelegarProcesso(data) {
 
+        try {
+            setLoadingDelegar(prev => true);
+            const processo = new Processo();
+            const res = await processo.delegar({ data, id: processoId });
+            console.log(res);
+
+            setVisibleTarefa(prv => false)
+            setLoadingDelegar(pre => false)
+        } catch (error) {
+            NotifyError("Erro ao delegar processo!");
+            setLoadingDelegar(prev => false);
+            return; // para evitar que o código continue executando
+        }
+
+    }
     console.log("PROGRESSO 2", processos);
-
-
     console.log("ERRO FORM", errors);
-
-
     const filteredProcessos = processos?.filter((process) =>
         process?.processo?.beneficiario?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
         || process?.processo?.passaporteNumero?.toLowerCase().includes(searchTerm?.toLowerCase())
@@ -238,13 +253,19 @@ export default function Listar() {
         || ("Dia " + new Date(process?.processo?.createdAt).getDay()).toLowerCase().includes(searchTerm?.toLowerCase())
         || process?.processo?.tipoVisto?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
         || process?.step?.nome?.toLowerCase().includes(searchTerm?.toLowerCase())
-
     )
-        ;
 
-    const styleDropdown = {};
+
+    const [verGestores, setVerGestores] = useState(false)
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
     return (
         <AppButtonRoot>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
             <>
                 <CModal
                     alignment="center"
@@ -257,9 +278,7 @@ export default function Listar() {
                     </CModalHeader>
                     <CForm onSubmit={handleSubmit(gerarMapa)} >
                         <CModalBody>
-
                             <CRow className="mb-4">
-
                                 <CCol>
                                     <CFormSelect {...register("tipoVistoId")} defaultValue={1} size="sm"
                                         id="validationServer05" label="Tipo: ">
@@ -278,7 +297,6 @@ export default function Listar() {
                                     </CFormSelect>
                                 </CCol>
                             </CRow>
-
                             <CRow>
                                 <CCol>
                                     <CFormSelect defaultValue={new Date().getFullYear().toString()} {...register("year")} size="sm" id="validationServer06" label="Ano">
@@ -306,10 +324,6 @@ export default function Listar() {
                                     </CFormSelect>
                                 </CCol>
                             </CRow>
-
-
-
-
                         </CModalBody>
                         <CModalFooter>
                             <CButton color="secondary" onClick={() => setVisibleMapa(false)}>
@@ -360,134 +374,166 @@ export default function Listar() {
                     </CForm>
                 </CModal>
             </>
-            <CCallout color="info">
-                Cliente:<strong>{projectoData?.cliente?.nome}</strong> <br></br>
-                Gestor 1: <strong>{projectoData?.gestorInterno?.nome}</strong><br></br>
-                Gestor 2:<strong>{projectoData?.gestorExterno?.nome}</strong><br></br>
-            </CCallout>
+
+            <CAlert color="secondary">
+
+                <CInputGroup className="mt-2" size="sm">
+                    <CInputGroupText size="sm">
+                        <Search color="info" size="sm"></Search>
+                    </CInputGroupText>
+                    <CFormInput
+                        type="text"
+                        size="sm"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        placeholder="beneficiario, passaporte, codigo, visto, data, faze, status"
+                    />
+                </CInputGroup>
+            </CAlert>
 
             <div className="w-100 d-flex  justify-content-between">
-                <strong>Processos ({totalProcessos})   <Person></Person> </strong>
+                <StyledButton size="small" color="info" variant="text">Todos</StyledButton>
                 <div className="d-flex">
                     <Link
                         onClick={() => {
                             setVisibleMapa(prev => true)
                         }}
                     >
-                        <StyledButton className="d-flex align-content-center" size="sm" variant="contained" color="success">
-                            Mapa <Print></Print>
+                        <StyledButton className="d-flex align-content-center" size="sm" variant="contained" color="info">
+                            Mapa <Print className="" style={{ marginLeft: "4px" }}></Print>
                         </StyledButton>
 
                     </Link>
-
-                    <Link to={`/clientes/${clientId}/processos/add`}>
-                        <StyledButton className="d-flex align-content-center" size="sm" variant="outlined" color="success">
+                    <StyledButton className="d-flex align-content-center" size="sm" variant="contained" color="info" onClick={(event) => {
+                        event.preventDefault()
+                        setVerGestores(!verGestores)
+                    }}
+                    >
+                        Gestores <GroupOutlined></GroupOutlined>
+                    </StyledButton>
+                    <Link to={`/clientes/${clienteId}/projecto/${projectoId}/processos/add`}>
+                        <StyledButton className="d-flex align-content-center" size="sm" variant="contained" color="success">
                             Criar Novo <Add></Add>
                         </StyledButton>
                     </Link>
                 </div>
 
             </div>
+            <ListarEmProjecto gestores={projectoData?.gestores} visible={verGestores}></ListarEmProjecto>
 
-            <Box pt={4}>{/* <Campaigns /> */}</Box>
+            {/* <CRow md={6} className="mb-4">
+                <CCol md={3}>
+                    <CCallout>
+                        <Title>Turismo</Title>
+                        34
+                    </CCallout>
+                </CCol>
+                <CCol md={3}>
+                    <CCallout>
+                        <Title>Trabalho</Title>
+                        34
+                    </CCallout>
+                </CCol>
+                <CCol md={3}>
+                    <CCallout>
+                        <Title>Fronteira</Title>
+                        34
+                    </CCallout>
+                </CCol>
+                <CCol md={3}>
+                    <CCallout>
+                        <Title>Curta Duração</Title>
+                        34
+                        <div>
+                            <span> concluido:3</span>
+                            <span> concluido:3</span>
+                            <span> concluido:3</span>
+                        </div>
+                    </CCallout>
+                </CCol>
+
+            </CRow> */}
 
             <Card elevation={3} sx={{ pt: "10px", mb: 3 }}>
                 <CContainer className="d-flex justify-content-between">
                     <CForm>
-                        <div className="d-flex w-100   "  >
+                        <div className="d-flex w-100" >
+                            <CFormSelect size="sm"
+                                onChange={(event) => { setOrderBy(prev => event.target.value) }}
+                                id="validationServer05"  >
+                                <option value={"nome"} selected>
+                                    Ordenar por
+                                </option>
 
+                                <option value={"createdAt"}>
+                                    Data de Criação
+                                </option>
+                                <option value={"nome"}>
+                                    nome
+                                </option>
+                                <option value={"clienteId"}>
+                                    cliente
+                                </option>
+                            </CFormSelect>
+                            <CFormSelect size="sm"
+                                onChange={(event) => { setOrderBy(prev => event.target.value) }}
+                                id="validationServer05"  >
+                                <option value={"nome"} selected>
+                                    Ordenar por
+                                </option>
+
+                                <option value={"createdAt"}>
+                                    Data de Criação
+                                </option>
+                                <option value={"nome"}>
+                                    nome
+                                </option>
+                                <option value={"clienteId"}>
+                                    cliente
+                                </option>
+                            </CFormSelect>
+                            <CFormInput onChange={(event) => setDate(prev => new Date(event.target.value))} size="sm" type="date"></CFormInput>
+
+                        </div>
+                    </CForm>
+
+                    <CForm>
+                        <div className="d-flex w-100 p-2"  >
                             <CFormSelect {...register("stepId")} size="sm"
+                                id="validationServer05"  >
+                                <option disabled value={null}>
+                                    Visto
+                                </option>
+                                {vistos?.map((item) => (
+                                    <option value={item?.id}>
+                                        {item?.nome}
+                                    </option>
+                                ))}
+                            </CFormSelect>
+                            <CFormSelect  {...register("stepId")} size="sm"
                                 id="validationServer05"  >
                                 <option disabled value={null}>
                                     Faze
                                 </option>
-
-                                <option value={1}>
-                                    SME
-                                </option>
-                                <option value={2}>
-                                    MIREPET
-                                </option>
-
+                                {fases?.map((item) => (
+                                    <option value={item?.id}>
+                                        {item?.nome}
+                                    </option>
+                                ))}
                             </CFormSelect>
                             <CFormSelect {...register("statusId")} size="sm"
                                 id="validationServer05"  >
                                 <option disabled>
                                     Status
                                 </option>
-
-                                <option value={1}>
-                                    Tradução
-                                </option>
-                                <option value={2}>
-                                    Legalização
-                                </option>
-                                <option value={2}>
-                                    Em atraso
-                                </option>
-
+                                {status?.map((item) => (
+                                    <option value={item?.id}>{item?.nome}</option>
+                                ))}
                             </CFormSelect>
-                            <LoadingButton>Buscar</LoadingButton>
-                        </div>
 
+                        </div>
                     </CForm>
                 </CContainer>
-
-                <CContainer>
-                    <CInputGroup size="sm">
-                        <CInputGroupText size="sm">
-                            <Search size="sm"></Search>
-                        </CInputGroupText>
-                        <CFormInput
-                            type="text"
-                            size="sm"
-                            value={searchTerm}
-                            onChange={handleSearchChange}
-                            placeholder="beneficiario, passaporte, codigo, visto, data, faze, status"
-                        />
-                    </CInputGroup>
-
-                    <div className="d-flex w-100   "  >
-
-                        <CFormSelect size="sm"
-                            onChange={(event) => { setOrderBy(prev => event.target.value) }}
-                            id="validationServer05"  >
-                            <option value={"nome"} selected>
-                                Ordenar por
-                            </option>
-
-                            <option value={"createdAt"}>
-                                Data de Criação
-                            </option>
-                            <option value={"nome"}>
-                                nome
-                            </option>
-                            <option value={"clienteId"}>
-                                cliente
-                            </option>
-
-
-                        </CFormSelect>
-                        <CFormSelect onChange={(event) => { setOrder(prev => event.target.value) }}
-                            size="sm"
-                            id="validationServer05"  >
-                            <option value={"DESC"} selected>
-                                ordenar
-                            </option>
-
-                            <option value={"ASC"}>
-                                Ascendente
-                            </option>
-                            <option value={2}>
-                                Decrescente
-                            </option>
-
-                        </CFormSelect>
-                        <CFormInput onChange={(event) => setDate(prev => new Date(event.target.value))} size="sm" type="date"></CFormInput>
-                    </div>
-
-                </CContainer>
-
 
                 <Box overflow="auto">
 
@@ -513,16 +559,13 @@ export default function Listar() {
                                     Status
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
-                                    Data
+                                    Dat.Submissão
                                 </TableCell>
-
                                 <TableCell colSpan={2} sx={{ px: 2 }}>
                                     Acção
-
                                 </TableCell>
                             </TableRow>
                         </TableHead>
-
                         <TableBody style={{ overflow: "scroll" }}>
                             {loading ? (
                                 <CSpinner></CSpinner>
@@ -530,49 +573,36 @@ export default function Listar() {
                                 <>
                                     {filteredProcessos
                                         ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                        ?.map((projecto, index) => (
+                                        ?.map((processo, index) => (
                                             <TableRow key={index} hover>
-
                                                 <TableCell sx={{ px: 3 }} align="left" colSpan={5}>
                                                     {/* <StyledAvatar src={tecn?.avatar?.url} /> */}
                                                     <Box display="flex" alignItems="center" gap={3}>
-                                                        <Avatar src={projecto?.processo?.beneficiario?.avatar?.url} />
-                                                        <Paragraph style={{ textAlign: "center", fontSize: "0.74rem" }}>   {projecto?.processo?.beneficiario?.nome}</Paragraph>
+                                                        <Avatar src={processo?.beneficiario?.avatar?.url} />
+                                                        <Paragraph style={{ textAlign: "center", fontSize: "0.74rem" }}>   {processo?.beneficiario?.nome}</Paragraph>
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell sx={{ px: 3 }} align="left" colSpan={3}>
-                                                    <Paragraph >{VistoBadge({ status: projecto?.processo?.tipoVistoId })}</Paragraph>
+                                                    <Paragraph >{VistoBadge({ status: processo?.tipoVistoId })}</Paragraph>
                                                 </TableCell>
                                                 <TableCell sx={{ px: 2 }} align="left" colSpan={3}>
-                                                    <Paragraph style={{ fontSize: "0.60rem" }}>{projecto?.processo?.passaporteNumero}</Paragraph>
+                                                    <Paragraph  >{processo?.passaporteNumero}</Paragraph>
                                                 </TableCell>
                                                 <TableCell sx={{ px: 3 }} align="left" colSpan={3}  >
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>{new Date(projecto?.updatedAt).toLocaleDateString()}</CBadge>
+                                                    <Paragraph  >
+                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>{new Date(processo?.mob).toLocaleDateString()}</CBadge>
                                                     </Paragraph>
                                                 </TableCell>
-
-
-                                                {/* <TableCell
-                                                    sx={{ px: 3 }} align="left" colSpan={3}
-                                                >
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-warning text-black"}>24/04/2024</CBadge>
-                                                    </Paragraph>
-
-                                                </TableCell> */}
                                                 <TableCell sx={{ px: 3 }} align="left" colSpan={3}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {StatusBadge({ status: projecto?.step?.id })}
-
+                                                    <Paragraph  >
+                                                        {StatusBadge({ status: processo?.statusId })}
                                                     </Paragraph>
                                                 </TableCell>
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {formatDateDifference(new Date(projecto?.createdAt))}
+                                                    <Paragraph  >
+                                                        {formatDateDifference(new Date(processo?.createdAt))}
                                                     </Paragraph>
                                                 </TableCell>
-
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <CFormSelect
                                                         style={{ fontSize: "12px", minWidth: "5.45rem" }}
@@ -581,18 +611,18 @@ export default function Listar() {
                                                         onChange={async (e) => {
                                                             if (e.target.value == 1) {
                                                                 return goto(
-                                                                    `/processos/${projecto?.id}/detail`
+                                                                    `/processos/${processo?.processo?.id}/detail`
                                                                 );
                                                             }
                                                             if (e.target.value == 2) {
                                                                 return goto(
-                                                                    `/processos/${projecto?.passaporte}/edit`
+                                                                    `/processos/${processo?.processo?.id}/edit`
                                                                 );
                                                             }
 
                                                             if (e.target.value == 3) {
-                                                                console.log("SOLICI ID", projecto?.id);
-                                                                setPedido(prev => projecto?.id);
+                                                                console.log("SOLICI ID", processo?.processo?.id);
+                                                                setPedido(prev => processo?.id);
                                                                 setUpdateStatusId(prev => 3);
                                                                 setVisibleAprovar((prev) => true);
 
@@ -607,9 +637,9 @@ export default function Listar() {
                                                         sx={0}
                                                     >
                                                         <option>selecione</option>
-                                                        <option value={1}>visualisar</option>
-                                                        <option value={2}>Editar</option>
+                                                        <option value={1}>ver processo</option>
 
+                                                        {/* {(user?.painel?.nome === "ADMINISTRADOR" || user?.painel?.nome === "ADMINISTRADOR GERAL" || user?.painel?.nome === "ADMINISTRADOR DE PROJECTO") && <option value={3}>Delegar</option>} */}
 
                                                     </CFormSelect>
                                                 </TableCell>

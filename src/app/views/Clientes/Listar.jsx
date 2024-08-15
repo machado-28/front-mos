@@ -2,6 +2,7 @@ import {
     CAvatar,
     CBadge,
     CButton,
+    CCallout,
     CCol,
     CContainer,
     CForm,
@@ -24,12 +25,14 @@ import {
     FolderCopySharp,
     Image,
     Person,
+    PersonAdd,
     PlusOne,
     Search,
     TroubleshootOutlined
 } from "@mui/icons-material";
 import {
     Box,
+    Breadcrumbs,
     Button,
     Card,
     Switch,
@@ -43,10 +46,10 @@ import {
     styled,
     useTheme
 } from "@mui/material";
-import { Paragraph } from "app/components/Typography";
+import { H2, H3, Paragraph } from "app/components/Typography";
 import { useApi } from "app/hooks/useApi";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "./style.css";
 // import { ChartLine } from "./ChartLine";
 import { NotifyError } from "app/utils/toastyNotification";
@@ -58,6 +61,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Add from "@mui/icons-material/Add";
+import { Breadcrumb, SimpleCard } from "app/components";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 // STYLED COMPONENTS
 const CardHeader = styled(Box)(() => ({
@@ -219,10 +224,17 @@ export default function Listar() {
         cliente?.telefone2?.toLowerCase().includes(searchTerm?.toLowerCase()) || cliente?.ramo?.toLowerCase().includes(searchTerm?.toLowerCase())
     );
 
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
 
     const styleDropdown = {};
     return (
         <AppButtonRoot>
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
             <>
                 <CModal
                     alignment="center"
@@ -257,28 +269,29 @@ export default function Listar() {
                     </CForm>
                 </CModal>
             </>
+            <SimpleCard>
+                <div className="w-100 d-flex  justify-content-between">
+                    <H2>Clientes   ({clientes?.length})   <Person></Person> </H2>
+                    <div>
+                        <Link
+                            onClick={() => {
+                                setVisibleMapa(prev => true)
+                            }}
+                        >
 
-            <div className="w-100 d-flex  justify-content-between">
-                <strong>Clientes   ({clientes?.length})   <Person></Person> </strong>
-                <div>
-                    <Link
-                        onClick={() => {
-                            setVisibleMapa(prev => true)
-                        }}
-                    >
+                        </Link>
 
-                    </Link>
+                        <Link to={"/clientes/add"}>
+                            <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="contained" color="success">
+                                Criar Novo <PersonAdd></PersonAdd>
+                            </StyledButton>
+                        </Link>
+                    </div>
 
-                    <Link to={"/clientes/add"}>
-                        <StyledButton className="d-flex align-content-center" style={{ fontSize: "0.54rem", minWidth: "2.45rem", maxWidth: "6.45rem", borderRadius: 0 }} variant="outlined" color="success">
-                            Criar Novo <Add></Add>
-                        </StyledButton>
-                    </Link>
                 </div>
+            </SimpleCard>
 
-            </div>
-
-            <Box pt={4}>{/* <Campaigns /> */}</Box>
+            <Box pt={2}>{/* <Campaigns /> */}</Box>
 
             <Card elevation={3} sx={{ pt: "10px", mb: 3 }}>
                 <CContainer className="d-flex justify-content-between">
@@ -336,29 +349,27 @@ export default function Listar() {
                     <ProductTable>
                         <TableHead>
                             <TableRow>
-                                <TableCell colSpan={2} sx={{ px: 3 }}>
+                                <TableCell colSpan={1} sx={{ px: 1 }}>
                                     Id.
                                 </TableCell>
-                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                <TableCell colSpan={4} sx={{ px: 2 }}>
                                     Nome
                                 </TableCell>
-                                <TableCell colSpan={3} sx={{ px: 2 }}>
+                                <TableCell colSpan={2} sx={{ px: 2 }}>
                                     Empresa
                                 </TableCell>
-                                <TableCell colSpan={3} sx={{ px: 0 }}>
+                                <TableCell colSpan={2} sx={{ px: 0 }}>
                                     Email
                                 </TableCell>
 
                                 <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Tel.1
-                                </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Tel.2
+                                    Tel.
                                 </TableCell>
 
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
+
+                                {/* <TableCell colSpan={2} sx={{ px: 0 }}>
                                     Status
-                                </TableCell>
+                                </TableCell> */}
                                 <TableCell colSpan={2} sx={{ px: 0 }}>
                                     Dat. registo
                                 </TableCell>
@@ -378,12 +389,12 @@ export default function Listar() {
                                         ?.map((cliente, index) => (
                                             <TableRow key={index} hover>
 
-                                                <TableCell sx={{ px: 3 }} align="left" colSpan={2}>
+                                                <TableCell sx={{ px: 1 }} align="left" colSpan={1}>
                                                     <Paragraph style={{ fontSize: "0.60rem" }}>{cliente?.id}</Paragraph>
                                                 </TableCell>
 
                                                 <TableCell
-                                                    colSpan={3}
+                                                    colSpan={4}
                                                     align="left"
                                                     sx={{ px: 2, textTransform: "capitalize" }}
                                                 >
@@ -394,7 +405,7 @@ export default function Listar() {
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell
-                                                    colSpan={3}
+                                                    colSpan={2}
                                                     align="left"
                                                     sx={{ px: 2, textTransform: "capitalize" }}
                                                 >
@@ -405,7 +416,7 @@ export default function Listar() {
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell
-                                                    colSpan={3}
+                                                    colSpan={2}
                                                     align="left"
                                                     sx={{ px: 2, textTransform: "capitalize" }}
                                                 >
@@ -422,19 +433,14 @@ export default function Listar() {
                                                     </Paragraph>
 
                                                 </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <Paragraph style={{ fontSize: fSize }}>
-                                                        {cliente?.telefone2}
-                                                    </Paragraph>
 
-                                                </TableCell>
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                                                {/* <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <Paragraph style={{ fontSize: fSize }}>
 
                                                         <CBadge className={(index % 2 !== 0) ? "bg-success text-black" : "bg-danger text-black"}> {cliente?.activo == true ? "activo" : "inactivo"}</CBadge>
                                                     </Paragraph>
 
-                                                </TableCell>
+                                                </TableCell> */}
 
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <Paragraph style={{ fontSize: fSize }}>
@@ -473,10 +479,8 @@ export default function Listar() {
                                                     >
                                                         <option>selecione</option>
                                                         <option value={1}>visualisar</option>
-                                                        <option value={2}>Editar</option>
-                                                        <option value={3}>aprovar/recusar</option>
-
-
+                                                        {/* <option value={2}>Editar</option>
+                                                        <option value={3}>aprovar/recusar</option> */}
                                                     </CFormSelect>
                                                 </TableCell>
 

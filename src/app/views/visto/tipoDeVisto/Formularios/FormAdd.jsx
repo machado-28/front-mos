@@ -93,6 +93,8 @@ export default function FormAdd() {
                 const { data } = response
                 console.log("RESPOSTA SUCESSO", response);
                 setLoading(false);
+                if (!response?.data?.message)
+                    return;
                 Notify(response?.data?.message);
                 window.location.reload();
             });
@@ -152,7 +154,7 @@ export default function FormAdd() {
                         required
                         {...register("nacionalidade")}
                     >
-                       
+
                     </CFormInput>
                     {errors.nacionalidade && (
                         <div className="text-light bg-danger">{errors.nacionalidade.message}</div>
@@ -172,10 +174,10 @@ export default function FormAdd() {
                         required
                         {...register("nacionalidade")}
                     >
-                        
+
                     </CFormInput>
                 </CCol>
-                 
+
             </CRow>
 
             <CRow>

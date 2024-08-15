@@ -1,7 +1,7 @@
 import { useTheme } from "@mui/material/styles";
 import ReactEcharts from "echarts-for-react";
 
-export default function ComparisonChartGestorVisto({ height, dadosMensais }) {
+export default function FormtGrafico({ height, dadosMensais }) {
   const theme = useTheme();
 
   const adaptarDadosParaGrafico = (dadosMensais) => {

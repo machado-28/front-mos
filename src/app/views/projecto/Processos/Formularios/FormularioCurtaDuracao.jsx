@@ -185,6 +185,8 @@ export default function FormularioCurtaduracao({ clienteId }) {
           }
         }
         setLoading(false);
+        if (!response?.data?.message)
+          return;
         Notify(response?.data?.message);
         window.location.reload();
       });
@@ -318,15 +320,15 @@ export default function FormularioCurtaduracao({ clienteId }) {
         <CCol>
           <CFormInput
             type="text"
-            label="Sindicato"
+            label="  consulado"
             aria-label=" "
             aria-describedby="exampleFormControlInputHelpInline"
             text={
-              errors.sindicato && (
-                <div className="text-light bg-danger">{errors.sindicato.message}</div>
+              errors.consulado && (
+                <div className="text-light bg-danger">{errors.consulado.message}</div>
               )
             }
-            {...register("sindicato")}
+            {...register("  consulado")}
           />
         </CCol>
       </CRow>

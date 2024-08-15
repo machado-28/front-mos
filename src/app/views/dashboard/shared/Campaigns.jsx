@@ -7,7 +7,7 @@ export default function Campaigns() {
     <Box>
       <SimpleCard title="Campaigns">
         <Small color="text.secondary">Today</Small>
-        <MatxProgressBar value={75} color="primary" text="Google (102k)" />
+        <MatxProgressBar value={100} color="primary" text="Google (102k)" />
         <MatxProgressBar value={45} color="secondary" text="Twitter (40k)" />
         <MatxProgressBar value={75} color="primary" text="Tensor (80k)" />
 

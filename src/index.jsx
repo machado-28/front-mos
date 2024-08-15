@@ -4,6 +4,7 @@ import App from "./app/App";
 import * as serviceWorker from "./serviceWorker";
 // third party style
 import "perfect-scrollbar/css/perfect-scrollbar.css";
+
 import { BrowserRouter } from "react-router-dom";
 // import ErrorFallback from "app/views/sessions/ErrorBoundary";
 // import { ErrorBoundary } from 'react-error-boundary';

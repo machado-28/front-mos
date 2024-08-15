@@ -60,7 +60,7 @@ export default function FormEditar() {
         },
         { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
       ),
-    sindicato: z
+    consulado: z
       .string()
       .regex(validatePersonNames, "incorrecto")
       .refine(
@@ -294,8 +294,10 @@ export default function FormEditar() {
         const { data } = response
         console.log("RESPOSTA SUCESSO", response);
         setLoading(false);
+        if (!response?.data?.message)
+          return;
         Notify(response?.data?.message);
-        window.location.reload();
+        reset()
       });
     } catch (error) {
       NotifyError("Älgo deu Errado");
@@ -319,226 +321,226 @@ export default function FormEditar() {
       >
         Salvar
       </LoadingButton>
-      
- <CRow className="mb-4">
- <CCol>
-   <CFormInput
-     id="Nome"
-     aria-describedby="exampleFormControlInputHelpInline"
 
-     size="sm"
-     label="Nome"
-     required
+      <CRow className="mb-4">
+        <CCol>
+          <CFormInput
+            id="Nome"
+            aria-describedby="exampleFormControlInputHelpInline"
 
-   >
+            size="sm"
+            label="Nome"
+            required
 
-   </CFormInput>
- </CCol>
- <CCol>
-   <CFormInput
-     id="DataNascimento"
-     type="date"
-     aria-describedby="exampleFormControlInputHelpInline"
+          >
 
-     size="sm"
-     label="Data de Nascimento"
-     required
+          </CFormInput>
+        </CCol>
+        <CCol>
+          <CFormInput
+            id="DataNascimento"
+            type="date"
+            aria-describedby="exampleFormControlInputHelpInline"
 
-   >
-   </CFormInput>
- </CCol>
- <CCol>
-   <CFormInput
-     id="DataNascimento"
-     type="dateF"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Gênero"
-     required
-    
-   >
+            size="sm"
+            label="Data de Nascimento"
+            required
 
-   </CFormInput>
- </CCol>
+          >
+          </CFormInput>
+        </CCol>
+        <CCol>
+          <CFormInput
+            id="DataNascimento"
+            type="dateF"
+            aria-describedby="exampleFormControlInputHelpInline"
 
-</CRow>
-<CRow className="mb-4">
- <CCol>
-   <CFormInput
-     id="Passaporte"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Passaporte"
-     required
-    
-   >
+            size="sm"
+            label="Gênero"
+            required
 
-   </CFormInput>
- </CCol>
-</CRow>
-<CRow className="mb-4">
+          >
 
- <CCol>
-   <CFormInput
-     id="Telefone"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Telefone"
-     required
-    
-   >
+          </CFormInput>
+        </CCol>
 
-   </CFormInput>
- </CCol>
+      </CRow>
+      <CRow className="mb-4">
+        <CCol>
+          <CFormInput
+            id="Passaporte"
+            aria-describedby="exampleFormControlInputHelpInline"
 
- <CCol>
-   <CFormInput
-     id="Email"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Email"
-     required
-    
-   >
+            size="sm"
+            label="Passaporte"
+            required
 
-   </CFormInput>
- </CCol>
+          >
 
-</CRow>
-<Box pt={4}></Box>
+          </CFormInput>
+        </CCol>
+      </CRow>
+      <CRow className="mb-4">
 
-<h5>Dados Da Empresa</h5>
-<hr></hr>
-<CRow className="mb-4">
- <CCol>
-   <CFormInput
-     id="Nome"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Nome da Empresa"
-     required
-    
-   >
+        <CCol>
+          <CFormInput
+            id="Telefone"
+            aria-describedby="exampleFormControlInputHelpInline"
 
-   </CFormInput>
- </CCol>
- <CCol>
-   <CFormInput
-     id="nif"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="NIF"
-     required
-    
-   >
+            size="sm"
+            label="Telefone"
+            required
 
-   </CFormInput>
- </CCol>
- <CCol>
-   <CFormInput
-     id="Website"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Web site"
-     required
-    
-   >
+          >
 
-   </CFormInput>
- </CCol>
-</CRow>
-<CRow className="mb-4">
- <CCol>
+          </CFormInput>
+        </CCol>
 
-   <CFormInput
-     id="Email"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Área de actuação"
-     required
-    
-   >
+        <CCol>
+          <CFormInput
+            id="Email"
+            aria-describedby="exampleFormControlInputHelpInline"
 
-   </CFormInput>
+            size="sm"
+            label="Email"
+            required
 
- </CCol>
- <CCol>
-   <CFormInput
-     id="Website"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Telefone"
-     required
-    
-   >
+          >
 
-   </CFormInput>
- </CCol>
- <CCol>
-   <CFormInput
-     id="Email"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Email"
-     required
-    
-   >
+          </CFormInput>
+        </CCol>
 
-   </CFormInput>
- </CCol>
-</CRow>
-<CRow>
- <h6>Localização</h6>
- <CCol>
-   <CFormInput
-     id="Nome"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="Provincia"
-     required
-    
-   >
+      </CRow>
+      <Box pt={4}></Box>
 
-   </CFormInput>
- </CCol>
- <CCol>
-   <CFormInput
-     id="Website"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="municipio"
-     required
-    
-   >
+      <h5>Dados Da Empresa</h5>
+      <hr></hr>
+      <CRow className="mb-4">
+        <CCol>
+          <CFormInput
+            id="Nome"
+            aria-describedby="exampleFormControlInputHelpInline"
 
-   </CFormInput>
- </CCol>
- <CCol>
-   <CFormInput
-     id="Comuna"
-     aria-describedby="exampleFormControlInputHelpInline"
-     
-     size="sm"
-     label="municipio"
-     required
-    
-   >
+            size="sm"
+            label="Nome da Empresa"
+            required
 
-   </CFormInput>
- </CCol>
-</CRow>
-</CForm>
+          >
+
+          </CFormInput>
+        </CCol>
+        <CCol>
+          <CFormInput
+            id="nif"
+            aria-describedby="exampleFormControlInputHelpInline"
+
+            size="sm"
+            label="NIF"
+            required
+
+          >
+
+          </CFormInput>
+        </CCol>
+        <CCol>
+          <CFormInput
+            id="Website"
+            aria-describedby="exampleFormControlInputHelpInline"
+
+            size="sm"
+            label="Web site"
+            required
+
+          >
+
+          </CFormInput>
+        </CCol>
+      </CRow>
+      <CRow className="mb-4">
+        <CCol>
+
+          <CFormInput
+            id="Email"
+            aria-describedby="exampleFormControlInputHelpInline"
+
+            size="sm"
+            label="Área de actuação"
+            required
+
+          >
+
+          </CFormInput>
+
+        </CCol>
+        <CCol>
+          <CFormInput
+            id="Website"
+            aria-describedby="exampleFormControlInputHelpInline"
+
+            size="sm"
+            label="Telefone"
+            required
+
+          >
+
+          </CFormInput>
+        </CCol>
+        <CCol>
+          <CFormInput
+            id="Email"
+            aria-describedby="exampleFormControlInputHelpInline"
+
+            size="sm"
+            label="Email"
+            required
+
+          >
+
+          </CFormInput>
+        </CCol>
+      </CRow>
+      <CRow>
+        <h6>Localização</h6>
+        <CCol>
+          <CFormInput
+            id="Nome"
+            aria-describedby="exampleFormControlInputHelpInline"
+
+            size="sm"
+            label="Provincia"
+            required
+
+          >
+
+          </CFormInput>
+        </CCol>
+        <CCol>
+          <CFormInput
+            id="Website"
+            aria-describedby="exampleFormControlInputHelpInline"
+
+            size="sm"
+            label="municipio"
+            required
+
+          >
+
+          </CFormInput>
+        </CCol>
+        <CCol>
+          <CFormInput
+            id="Comuna"
+            aria-describedby="exampleFormControlInputHelpInline"
+
+            size="sm"
+            label="municipio"
+            required
+
+          >
+
+          </CFormInput>
+        </CCol>
+      </CRow>
+    </CForm>
   );
 }

@@ -186,6 +186,8 @@ export default function FormularioFronteira({ clienteId }) {
           }
         }
         setLoading(false);
+        if (!response?.data?.message)
+          return;
         Notify(response?.data?.message);
         window.location.reload();
       });
@@ -269,7 +271,7 @@ export default function FormularioFronteira({ clienteId }) {
   return (
     <CForm onSubmit={handleSubmit(PostData)} style={{ borderRadius: "none" }}>
       <Box pt={2}></Box>
-     
+
 
       <H3 className="mb-2"> UPLOD DOS DOCUMENTOS</H3>
       <Paragraph className="mb-4 text-warning">

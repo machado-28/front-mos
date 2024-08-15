@@ -31,7 +31,7 @@ import {
 } from "@coreui/react";
 import { useApi } from "app/hooks/useApi";
 import { AppButtonRoot } from "app/components/AppBuutonRoot";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { functions, min, values } from "lodash";
 import { Bounce, toast } from "react-toastify";
 import { listaPais } from "app/utils/paises";
@@ -47,6 +47,7 @@ import {
 import { LoadingButton } from "@mui/lab";
 import { Tecnico } from "../../util";
 import { useEffect } from "react";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 export default function FormAdd() {
   const validadeDate = new ValidateData().byInterval;
@@ -55,22 +56,22 @@ export default function FormAdd() {
     nome: z
       .string()
 
-      .regex(validatePersonNames, "nome incorrecto")
-      .refine(
-        (name) => {
-          return capitalize(name);
-        },
-        { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
-      ),
-
+    // .regex(validatePersonNames, "nome incorrecto")
+    // .refine(
+    //   (name) => {
+    //     return capitalize(name);
+    //   },
+    //   { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
+    // ),,
+    ,
     telefone: z.coerce
       .number({ message: "Telefone Incorrecto" }),
 
-    email: z.string().email("insira um email válido!"),
-    image: z
-      .instanceof(FileList)
-      .refine(files => files.length === 1, 'Imagen es requerida')
-      .transform(files => files[0]),
+    email: z.coerce.string()
+    // image: z
+    //   .instanceof(FileList)
+    //   .refine(files => files.length === 1, 'Imagen es requerida')
+    //   .transform(files => files[0]),
 
   });
 
@@ -153,7 +154,7 @@ export default function FormAdd() {
 
       const response = await api
         .add(
-          `upload`,
+          `upload/one`,
           formData
         )
         .catch(({ error }) => {
@@ -180,14 +181,15 @@ export default function FormAdd() {
       dados.avatarId = res?.data?.documento?.id || tecnico?.avatarId;
       dados.clienteId = clienteId
       const response = await api.edit("tecnicos", dados).then(async (response) => {
-
         const { data } = response
-        console.log("RESPOSTA SUCESSO", response);
         setLoading(false);
+        if (!response?.data?.message)
+          return;
         Notify(response?.data?.message);
 
       });
-      window.location.reload()
+      if (response?.status == 200 || response?.status == 201)
+        window.location.reload();
     } catch (error) {
       NotifyError("Erro insperado");
       console.log(error);
@@ -250,18 +252,20 @@ export default function FormAdd() {
     }
     return groups;
   };
-  const styleInput = {};
+  const location = useLocation();
+  const routeSegments = generateBreadcrumbs(location);
   return (
     <AppButtonRoot>
+      <Box className="breadcrumb">
+        <Breadcrumb
+          routeSegments={routeSegments}
+        />
+      </Box>
       <Box overflow="auto">
         <CForm onSubmit={handleSubmit(PostData)} style={{ borderRadius: "none" }}>
-          <Box pt={4}></Box>
-
-
           <div className="w-100 d-flex  justify-content-between">
             <H2>EDITAR <Folder></Folder> </H2>
             <div>
-
               <LoadingButton
                 className="text-white px-4 "
                 color="success"
@@ -299,11 +303,11 @@ export default function FormAdd() {
 
                 htmlFor="image"
                 label="Foto Passe"
-                
+
                 aria-describedby="exampleFormControlInputHelpInline"
                 accept="image/png, image/jpeg,"
                 type="file"
-                
+
                 onChange={handleFileChange}
               />
 

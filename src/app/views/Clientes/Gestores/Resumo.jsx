@@ -35,6 +35,7 @@ export default function Resumo({ data = [
     },
 
 
+
 ] }) {
     const { user } = useAuth();
 
@@ -42,8 +43,6 @@ export default function Resumo({ data = [
 
         <CRow className="mt-4">
             <StatCards cardList={data} ></StatCards>
-
-
         </CRow>
 
     )

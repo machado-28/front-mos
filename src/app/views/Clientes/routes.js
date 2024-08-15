@@ -15,22 +15,22 @@ const clienteRoutes = [
     { path: "/clientes/add", element: <Add /> },
 
     {
-        path: "/clientes/:clienteId/edit", element: <PrivateRoutes auth={authRoles.gestorVistoSecretaria}>
+        path: "/clientes/:clienteId/edit", element: <PrivateRoutes auth={authRoles.administradorProjecto}>
             <Edit />
         </PrivateRoutes>
     },
     {
-        path: "/clientes/list", element: <PrivateRoutes auth={authRoles.gestorVistoSecretaria}>
+        path: "/clientes/list", element: <PrivateRoutes auth={authRoles.tecnicoProcesso}>
             <List />
         </PrivateRoutes>
     },
     {
-        path: "/clientes/:clienteId/detail", element: <PrivateRoutes auth={authRoles.gestorVistoSecretaria}>
+        path: "/clientes/:clienteId/detail", element: <PrivateRoutes auth={authRoles.tecnicoProcesso}>
             <Detalhar />
         </PrivateRoutes>
     },
     {
-        path: "/clientes/pendentes", element: <PrivateRoutes auth={authRoles.gestorVistoSecretaria}>
+        path: "/clientes/pendentes", element: <PrivateRoutes auth={authRoles.tecnicoProcesso}>
             <Pendentes />
         </PrivateRoutes>
     },

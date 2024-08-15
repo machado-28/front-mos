@@ -21,7 +21,7 @@ const projectoRoutes = [
     { path: "/projectos/relatorio", element: <Relatorio /> },
 
     {
-        path: "/projectos/list", element: <PrivateRoutes auth={authRoles.gestorCliente}>
+        path: "/projectos/list", element: <PrivateRoutes auth={authRoles.gestorCliente.concat(authRoles.gestorProjecto)}>
             <List />
         </PrivateRoutes>
     },
@@ -32,7 +32,7 @@ const projectoRoutes = [
         </PrivateRoutes>
     },
     {
-        path: "/projectos/:id/detail", element: <PrivateRoutes auth={authRoles.gestorVisto}>
+        path: "/projectos/:id/detail", element: <PrivateRoutes auth={authRoles.gestorCliente}>
             <Detail />
         </PrivateRoutes>
     },

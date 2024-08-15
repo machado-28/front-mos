@@ -46,7 +46,7 @@ export default function FormularioEditPedido({ processoId }) {
         },
         { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
       ),
-    sindicato: z
+    consulado: z
       .string()
       .regex(validatePersonNames, "incorrecto")
       .refine(
@@ -246,6 +246,8 @@ export default function FormularioEditPedido({ processoId }) {
           NotifyError(response?.data?.message);
         }
         if (response.status === 201) {
+          if (!response?.data?.message)
+            return;
           Notify(response?.data?.message);
         }
       })
@@ -264,6 +266,8 @@ export default function FormularioEditPedido({ processoId }) {
           NotifyError(response?.data?.message);
         }
         if (response.status === 201) {
+          if (!response?.data?.message)
+            return;
           Notify(response?.data?.message);
         }
       })

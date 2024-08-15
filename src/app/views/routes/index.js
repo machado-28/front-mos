@@ -8,6 +8,9 @@ import tecnicoRoutes from "../tecnico/routes";
 import pedidosRoutes from "../pedidos/routes";
 import { Navigate } from "react-router-dom";
 import usuariosRoutes from "../usuario/routes";
+import VistosRoutes from "../visas/routes";
+import AccessLogsRoutes from "../logs/routes";
+import funcionariosRoutes from "../funcionarios/routes";
 
 const cliente = JSON.parse(localStorage.getItem("user"));
 const adminRoutes = [
@@ -21,7 +24,10 @@ const adminRoutes = [
     ...projectoRoutes,
     ...tecnicoRoutes,
     ...pedidosRoutes,
-    ...usuariosRoutes
+    ...usuariosRoutes,
+    ...VistosRoutes,
+    ...AccessLogsRoutes,
+    ...funcionariosRoutes,
 ];
 
 

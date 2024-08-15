@@ -6,10 +6,12 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFilterOptions } from "@mui/material/Autocomplete";
-import { Archive, Email, FileCopySharp, FileUploadSharp, Image, LogoDevSharp, Password, Person, Phone, Share, Title } from "@mui/icons-material";
+import { Archive, Email, FileCopySharp, FileUploadSharp, Image, Key, LogoDevSharp, Password, Person, Phone, Share, Title } from "@mui/icons-material";
 
 import {
+    CAlert,
     CButton,
+    CCallout,
     CCard,
     CCardBody,
     CCol,
@@ -66,7 +68,7 @@ export default function FormAdd() {
             .min(2, { message: "Este campo é obrigatorio" }),
         nif: z.coerce
             .string({ message: "Telefone Incorrecto" })
-            .min(9, { message: "Este campo é obrigatorio" }),
+            .min(10, { message: "NIF deve conver 10 dígitos" }).max(10, { message: "NIF deve conver 10 dígitos" }),
         site: z.coerce
             .string({ message: "Telefone Incorrecto" }).url("endereço do site inválido!"),
 
@@ -76,47 +78,25 @@ export default function FormAdd() {
             .min(1, { message: "Este campo é obrigatorio" }),
         telefone2: z.coerce
             .string({ message: "Telefone Incorrecto" })
-            .min(9, { message: "Este campo é obrigatorio" }),
+        ,
         email: z.string().email("insira um email válido!").min(1, { message: "Este campo é obrigatorio!" })
         ,
         endereco: z.object({
             provincia: z
                 .string()
-                .min(1, { message: "Este campo é obrigatorio" })
-                .regex(validatePersonNames, "incorrecto")
-                .refine(
-                    (name) => {
-                        return capitalize(name);
-                    },
-                    { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
-                ),
+
+            ,
+
             cidade: z
                 .string()
-                .min(1, { message: "Este campo é obrigatorio" })
-                .regex(validatePersonNames, "incorrecto")
-                .refine(
-                    (name) => {
-                        return capitalize(name);
-                    },
-                    { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
-                ),
+
+            ,
             comuna: z
                 .string()
-                .min(1, { message: "Este campo é obrigatorio" })
-                .regex(validatePersonNames, "incorrecto")
-                .refine(
-                    (name) => {
-                        return capitalize(name);
-                    },
-                    { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
-                )
+
+
         }),
-        ramo: z.string().min(4, { message: "campo obrigatorio" }).regex(validatePersonNames, "incorrecto").refine(
-            (name) => {
-                return capitalize(name);
-            },
-            { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
-        ),
+        ramo: z.string().regex(validatePersonNames, "palavra incorrecta"),
         usuario: z.string().min(4, { message: "campo obrigatorio" }),
         senha: z.string().min(6, " A senha deve conter no minimo 6 caracteres")
     });
@@ -130,7 +110,7 @@ export default function FormAdd() {
     } = useForm({
         resolver: zodResolver(addProcessoShema),
         shouldFocusError: true,
-        progressive: true
+        defaultValues: {}
     });
 
     if (errors) console.log("ERRO", errors);
@@ -142,18 +122,22 @@ export default function FormAdd() {
 
     async function PostData(dados) {
         try {
-            
+
             setLoading(true);
             const response = await api.add("clientes", dados).then(async (response) => {
 
                 const { data } = response
-                console.log("RESPOSTA SUCESSO", response);
+
                 setLoading(false);
-                Notify(response?.data?.message);
-                window.location.reload();
+                if (!response?.data?.message) {
+                    setError(response?.data?.message)
+                    return;
+                }
+
+                reset()
             });
         } catch (error) {
-            
+
             console.log(error);
             setLoading(false);
 
@@ -193,6 +177,13 @@ export default function FormAdd() {
                 xs={12}
                 sx={{ mt: 2 }}
             >
+                {error ? <CAlert color="danger">
+                    {error}
+                </CAlert> : <CAlert color="warning">
+                    Nota:  <i>
+                        Preencha os Formularios cuidadosa e minuciosamente
+                        <br></br> Estes dados são sensíveis.
+                    </i></CAlert>}
 
                 <CRow className="mb-4">
                     <CCol>
@@ -244,7 +235,7 @@ export default function FormAdd() {
                                 )
                             }
                             label="Telefone 2"
-                            required
+
                             {...register("telefone2")}
                         >
 
@@ -270,45 +261,7 @@ export default function FormAdd() {
                     </CCol>
 
                 </CRow>
-                <Box pt={4}></Box>
-                <h5>Dados De Acesso</h5>
-                <hr></hr>
-                <CRow className="mb-4">
-                    <CCol>
-                        <CFormInput
-                            size="sm"
-                            id="usuario"
-                            aria-describedby="exampleFormControlInputHelpInline"
-                            text={
-                                errors?.usuario && (
-                                    <div className="text-light bg-danger">{errors?.usuario?.message}</div>
-                                )
-                            }
-                            label="Nome de Usuario"
-                            required
-                            {...register("usuario")}
-                        >
 
-                        </CFormInput>
-                    </CCol>
-                    <CCol>
-                        <CFormInput
-                            size="sm"
-                            id="senha"
-                            aria-describedby="exampleFormControlInputHelpInline"
-                            text={
-                                errors?.senha && (
-                                    <div className="text-light bg-danger">{errors.senha?.message}</div>
-                                )
-                            }
-                            label="Senha"
-                            required
-                            {...register("senha")}
-                        >
-
-                        </CFormInput>
-                    </CCol>
-                </CRow>
                 <Box pt={4}></Box>
 
                 <h5>Dados Da Empresa</h5>
@@ -359,7 +312,7 @@ export default function FormAdd() {
                                 )
                             }
                             label="Web site"
-                            required
+
                             {...register("site")}
                         >
 
@@ -379,7 +332,7 @@ export default function FormAdd() {
                                 )
                             }
                             label="Área de actuação"
-                            required
+
                             {...register("ramo")}
                         >
 
@@ -400,7 +353,7 @@ export default function FormAdd() {
                                 )
                             }
                             label="Provincia"
-                            required
+
                             {...register("endereco.provincia")}
                         >
                         </CFormInput>
@@ -416,7 +369,7 @@ export default function FormAdd() {
                                 )
                             }
                             label="cidade"
-                            required
+
                             {...register("endereco.cidade")}
                         >
 
@@ -433,7 +386,7 @@ export default function FormAdd() {
                                 )
                             }
                             label="comuna"
-                            required
+
                             {...register("endereco.comuna")}
                         >
 
@@ -442,6 +395,57 @@ export default function FormAdd() {
                 </CRow>
 
             </SimpleCard>
-        </CForm>
+
+            <CCallout>
+                <Box pt={4}></Box>
+                <h5>Dados De Login</h5>
+                <CAlert color="warning">
+                    Nota:  <i>
+                        Estes dados devem ser usado pelo
+                        cliente, para que possa acompanhar o status de seus processos.
+                        <br></br> Estes dados são sensíveis.
+                    </i></CAlert>
+
+                <hr></hr>
+                <CRow className="mb-4">
+                    <CCol>
+                        <Person></Person>
+                        <CFormInput
+                            size="sm"
+                            id="usuario"
+                            aria-describedby="exampleFormControlInputHelpInline"
+                            text={
+                                errors?.usuario && (
+                                    <div className="text-light bg-danger">{errors?.usuario?.message}</div>
+                                )
+                            }
+                            label="Nome de Usuario"
+                            required
+                            {...register("usuario")}
+                        >
+
+                        </CFormInput>
+                    </CCol>
+                    <CCol>
+                        <Key></Key>
+                        <CFormInput
+                            size="sm"
+                            id="senha"
+                            aria-describedby="exampleFormControlInputHelpInline"
+                            text={
+                                errors?.senha && (
+                                    <div className="text-light bg-danger">{errors.senha?.message}</div>
+                                )
+                            }
+                            label="Senha"
+                            required
+                            {...register("senha")}
+                        >
+
+                        </CFormInput>
+                    </CCol>
+                </CRow>
+            </CCallout>
+        </CForm >
     );
 }

@@ -60,7 +60,7 @@ export default function FormAdd() {
                 },
                 { message: "O nome de começar com maiúcula e o restante deve ser minuscula" }
             ),
-        sindicato: z
+        consulado: z
             .string()
             .regex(validatePersonNames, "incorrecto")
             .refine(
@@ -291,6 +291,8 @@ export default function FormAdd() {
                 const { data } = response
                 console.log("RESPOSTA SUCESSO", response);
                 setLoading(false);
+                if (!response?.data?.message)
+                    return;
                 Notify(response?.data?.message);
                 window.location.reload();
             });
@@ -312,7 +314,7 @@ export default function FormAdd() {
                         {documents[i].name}
                         <CInputGroup className="mb-6 position-relative">
                             <CFormInput
-                                size="sm"formEnc
+                                size="sm" formEnc
                                 Type="multipart/form-data"
                                 text=""
                                 aria-describedby="exampleFormControlInputHelpInline"
@@ -321,7 +323,7 @@ export default function FormAdd() {
                                 key={`document-${documents[i].id}`}
                                 htmlFor={`document-${documents[i].id}`}
                                 accept="image/png, image/jpeg, application/pdf"
-                                 
+
                                 type="file"
                                 required
                                 onChange={handleFileChange}
@@ -336,7 +338,7 @@ export default function FormAdd() {
                                 {documents[i + 1].name}
                                 <CInputGroup className="mb-6 position-relative">
                                     <CFormInput
-                                        size="sm"formEnc
+                                        size="sm" formEnc
                                         Type="multipart/form-data"
                                         text=""
                                         aria-describedby="exampleFormControlInputHelpInline"
@@ -344,7 +346,7 @@ export default function FormAdd() {
                                         key={`document-${documents[i + 1].id}`}
                                         htmlFor={`document-${documents[i + 1].id}`}
                                         accept="image/png, image/jpeg, application/pdf"
-                                      
+
                                         type="file"
                                         required
                                         onChange={handleFileChange}

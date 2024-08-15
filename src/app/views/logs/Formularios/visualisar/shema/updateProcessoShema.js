@@ -6,7 +6,7 @@ const { z } = require("zod");
 const validadeDate = new ValidateData().byInterval;
 const seisMesesNoFuturo = validadeDate({ date: new Date(), interval: 6 });
 
-const curtaDuracaoShema = z.object({
+const updateProcessoShema = z.object({
     passaporte: z.object({
         numero: z.string().regex(validatePassporte, "Passaporte invalido!").max(9),
         dataEmissao: z.coerce
@@ -28,4 +28,4 @@ const curtaDuracaoShema = z.object({
     localProjecto: z
         .string().min(1, msgRequiredField),
 });
-export default curtaDuracaoShema
+export default updateProcessoShema

@@ -103,10 +103,10 @@ export default function FormAdd() {
 
             const response = await api.add("gestores", dados).then(async (response) => {
 
-                const { data } = response
                 console.log("RESPOSTA SUCESSO", response);
                 setLoading(false);
-                Notify(response?.data?.message);
+
+                Notify(response);
                 window.location.reload();
             });
         } catch (error) {

@@ -1,4 +1,5 @@
 import {
+    CAlert,
     CBadge,
     CButton,
     CCol,
@@ -15,6 +16,7 @@ import {
     CModalFooter,
     CModalHeader,
     CModalTitle,
+    CRow,
     CSpinner
 } from "@coreui/react";
 import {
@@ -41,10 +43,10 @@ import {
     styled,
     useTheme
 } from "@mui/material";
-import { Paragraph } from "app/components/Typography";
+import { H2, Paragraph } from "app/components/Typography";
 import { useApi } from "app/hooks/useApi";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import "./style.css";
 // import { ChartLine } from "./ChartLine";
 import { NotifyError } from "app/utils/toastyNotification";
@@ -57,6 +59,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Add from "@mui/icons-material/Add";
 import useAuth from "app/hooks/useAuth";
+import { Breadcrumb } from "app/components";
+import { generateBreadcrumbs } from "app/utils/generateBreadcrumbs";
 
 // STYLED COMPONENTS
 const CardHeader = styled(Box)(() => ({
@@ -198,25 +202,29 @@ export default function Listar() {
     useEffect(() => {
         buscarTecnicos()
     }, [order, orderBy, date]);
+    const location = useLocation();
+    const routeSegments = generateBreadcrumbs(location);
 
     return (
         <AppButtonRoot>
-            <div className="w-100 d-flex  justify-content-between">
-                <strong>Lista de Técnicos-beneficiários ({tecnicos?.length})  <Person></Person></strong>
-                <div>
-                    <Link
-                        onClick={() => {
-                            setVisibleMapa(prev => true)
-                        }}
-                    >
-                    </Link>
-
-                    <Print style={{cursor:"pointer"}} color="info"></Print>
-
+            <Box className="breadcrumb">
+                <Breadcrumb
+                    routeSegments={routeSegments}
+                />
+            </Box>
+            <CAlert color="secondary">
+                <div className="w-100 d-flex  justify-content-between">
+                    <H2>Lista de Técnicos-beneficiários ({tecnicos?.length})  <Person></Person></H2>
+                    <div>
+                        <Link
+                            onClick={() => {
+                                setVisibleMapa(prev => true)
+                            }}
+                        >
+                        </Link>
+                    </div>
                 </div>
-
-            </div>
-
+            </CAlert>
             <Box pt={4}>{/* <Campaigns /> */}</Box>
 
             <Card elevation={3} sx={{ pt: "10px", mb: 3 }}>
@@ -280,7 +288,7 @@ export default function Listar() {
                         <TableHead>
                             <TableRow>
 
-                                <TableCell colSpan={4} sx={{ px: 3 }}>
+                                <TableCell colSpan={2} sx={{ px: 3 }}>
                                     Técnico/beneficiário
                                 </TableCell>
 
@@ -289,13 +297,6 @@ export default function Listar() {
                                 </TableCell>
                                 <TableCell colSpan={2} sx={{ px: 0 }}>
                                     Telefone
-                                </TableCell>
-
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    Tot. Processos
-                                </TableCell>
-                                <TableCell colSpan={2} sx={{ px: 0 }}>
-                                    data. regist
                                 </TableCell>
                                 <TableCell colSpan={1} sx={{ px: 0 }}>
                                     Acções
@@ -313,15 +314,15 @@ export default function Listar() {
                                         ?.map((tecn, index) => (
                                             <TableRow key={index} hover>
 
-                                                <TableCell sx={{ px: 3 }} align="left" colSpan={4}>
+                                                <TableCell sx={{ px: 3 }} align="left" colSpan={2}>
                                                     {/* <StyledAvatar src={tecn?.avatar?.url} /> */}
                                                     <Box display="flex" alignItems="center" gap={4}>
-                                                        <Avatar src={tecn?.avatar?.url} />
+                                                        {/* <Avatar src={tecn?.avatar?.url} /> */}
                                                         <Paragraph>   {tecn?.nome}</Paragraph>
                                                     </Box>
                                                 </TableCell>
 
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                                                <TableCell sx={{ px: 2 }} align="left" colSpan={2}>
                                                     <Paragraph style={{ fontSize: fSize }}>
                                                         {tecn?.email}
                                                     </Paragraph>
@@ -333,61 +334,59 @@ export default function Listar() {
                                                     </Paragraph>
 
                                                 </TableCell>
-
+                                                {/* 
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <Paragraph style={{ fontSize: fSize }}>
                                                         {tecn?.processos?.length}
                                                     </Paragraph>
-                                                    <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
 
-                                                    </TableCell>
-                                                </TableCell>
-
-
-
-                                                <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
+                                                </TableCell> */}
+                                                {/* <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
                                                     <Paragraph style={{ fontSize: fSize }}>
                                                         {formatDateDifference(new Date(tecn?.createdAt))}
                                                     </Paragraph>
-                                                </TableCell>
+                                                </TableCell> */}
                                                 <TableCell sx={{ px: 0 }} align="left" colSpan={2}>
-                                                    <CFormSelect
-                                                        style={{ fontSize: "12px", minWidth: "6.45rem" }}
-                                                        id="validationServer04"
-                                                        onChange={async (e) => {
-                                                            if (e.target.value == 1) {
-                                                                return goto(
-                                                                    `/tecnicos/${tecn?.id}/detalhar`
-                                                                );
-                                                            }
-                                                            if (e.target.value == 2) {
-                                                                return goto(
-                                                                    `/tecnicos/${tecn?.id}/editar`
-                                                                );
-                                                            }
+                                                    <CRow>
+                                                        <CCol md={1}>
+                                                            <CFormSelect
+                                                                style={{ fontSize: "12px", minWidth: "6.45rem" }}
+                                                                id="validationServer04"
+                                                                onChange={async (e) => {
+                                                                    if (e.target.value == 1) {
+                                                                        return goto(
+                                                                            `/cliente/${tecn?.clienteId}/tecnicos/${tecn?.id}/processos`
+                                                                        );
+                                                                    }
+                                                                    if (e.target.value == 2) {
+                                                                        return goto(
+                                                                            `/tecnicos/${tecn?.id}/editar`
+                                                                        );
+                                                                    }
 
-                                                            if (e.target.value == 3) {
-                                                                console.log("SOLICI ID", tecn?.id);
-                                                                setPedido(prev => tecn?.id);
-                                                                setUpdateStatusId(prev => 3);
-                                                                setVisibleAprovar((prev) => true);
+                                                                    if (e.target.value == 3) {
+                                                                        console.log("SOLICI ID", tecn?.id);
+                                                                        setPedido(prev => tecn?.id);
+                                                                        setUpdateStatusId(prev => 3);
+                                                                        setVisibleAprovar((prev) => true);
 
-                                                            }
-                                                            if (e.target.value == 4) {
-                                                                setOpenRecusar((prev) => !true);
-                                                            }
+                                                                    }
+                                                                    if (e.target.value == 4) {
+                                                                        setOpenRecusar((prev) => !true);
+                                                                    }
 
-                                                            console.log(e.target.value);
-                                                        }}
+                                                                    console.log(e.target.value);
+                                                                }}
 
-                                                        sx={0}
-                                                    >
-                                                        <option>selecione</option>
-                                                        <option value={1}>visualisar</option>
-                                                        <option value={2}>Editar</option>
-                                                        <option value={3}>Apagar</option>
-
-                                                    </CFormSelect>
+                                                                sx={0}
+                                                            >
+                                                                <option>selecione</option>
+                                                                <option value={1}>ver processos</option>
+                                                                <option value={2}>Editar</option>
+                                                                <option value={3}>Apagar</option>
+                                                            </CFormSelect>
+                                                        </CCol>
+                                                    </CRow>
                                                 </TableCell>
 
                                             </TableRow>

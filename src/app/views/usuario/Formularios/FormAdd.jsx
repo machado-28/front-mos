@@ -92,7 +92,8 @@ export default function FormAdd() {
     } = useForm({
         resolver: zodResolver(addProcessoShema),
         shouldFocusError: true,
-        progressive: true
+        progressive: true,
+        defaultValues: {}
     });
 
     if (errors) console.log("ERRO", errors);
@@ -101,8 +102,9 @@ export default function FormAdd() {
     if (errors) console.log("ERRO", errors);
     const api = useApi();
     const [fileStram, sestFileStream] = useState();
+    const imagePreviewURL = "https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-Transparent-Free-PNG-Clip-Art.png"
 
-    const [imagePreview, setImagePreview] = useState("https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-Transparent-Free-PNG-Clip-Art.png");
+    const [imagePreview, setImagePreview] = useState(imagePreviewURL);
     const [imageId, setImageId] = useState('');
     const [anexos, setAnexos] = useState([]);
     const [fileSize, setFileSize] = useState(0);
@@ -179,18 +181,25 @@ export default function FormAdd() {
     async function PostData(dados) {
         try {
             setLoading(true);
-            const res = await PostFile({ file: fileStram });
-            console.log("%cAVATAR", "font-size:xx-large; color:blue", res);
-            dados.avatarId = res?.data?.documento?.id;
+
+            if (fileStram) {
+                const res = await PostFile({ file: fileStram });
+                console.log("%cAVATAR", "font-size:xx-large; color:blue", res);
+                dados.avatarId = res?.data?.documento?.id;
+            }
+
+
             const response = await api.add("usuarios", dados).then(async (response) => {
 
                 const { data } = response
                 console.log("RESPOSTA SUCESSO", response);
                 setLoading(false);
+                if (!response?.data?.message)
+                    return;
                 Notify(response?.data?.message);
-
+                setImagePreview(prev => imagePreviewURL)
             });
-            window.location.reload()
+            reset()
         } catch (error) {
             NotifyError("Erro insperado");
             console.log(error);
@@ -283,8 +292,8 @@ export default function FormAdd() {
 
 
             <Box pt={3}></Box>
-            <img src={imagePreview} loading="lazy" id="image" style={{ height: 100, width: 100 }}></img>
-            <CCol>
+            {/* <img src={imagePreview} loading="lazy" id="image" style={{ border: "1px solid #ccc", height: 100, width: 100 }}></img> */}
+            {/* <CCol>
                 <CFormInput
                     formEncType="multipart/form-data"
                     text=""
@@ -295,11 +304,10 @@ export default function FormAdd() {
                     aria-describedby="exampleFormControlInputHelpInline"
                     accept="image/png, image/jpeg,"
                     type="file"
-                    required
                     onChange={handleFileChange}
                 />
 
-            </CCol>
+            </CCol> */}
             <CRow className="mb-4 mt-4">
                 <CCol>
                     <CFormInput

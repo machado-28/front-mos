@@ -182,7 +182,7 @@ export default function Listar() {
     const gestor = new Gestores();
     async function buscarGestores() {
         const gest = await gestor.buscarTodos({ clienteId, order, orderBy, date, painelId: 5 });
-        console.log("GESTOR", gest, order, orderBy, date);
+        console.log("Cliente", clienteId);
 
         setgestores(prev => gest)
     }
@@ -203,7 +203,7 @@ export default function Listar() {
     return (
         <AppButtonRoot>
             <div className="w-100 d-flex  justify-content-between">
-                <strong>Lista de Gestores ({gestores?.length})  <Person></Person></strong>
+                <strong>Lista de Gestores eee ({gestores?.length})  <Person></Person></strong>
                 <div>
                     <Link
                         onClick={() => {
@@ -286,7 +286,7 @@ export default function Listar() {
                     <ProductTable>
                         <TableHead>
                             <TableRow>
-                                <TableCell colSpan={2} sx={{ px: 3 }}>
+                                <TableCell colSpan={1} sx={{ px: 1 }}>
                                     Cód.
                                 </TableCell>
                                 <TableCell colSpan={3} sx={{ px: 2 }}>
@@ -318,11 +318,10 @@ export default function Listar() {
                                         ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                         ?.map((gest, index) => (
                                             <TableRow key={index} hover>
-                                                <TableCell sx={{ px: 3 }} align="left" colSpan={2}>
+                                                <TableCell sx={{ px: 1 }} align="left" colSpan={1}>
 
                                                     <Paragraph style={{ fontSize: "0.60rem" }}>{gest?.id}</Paragraph>
                                                 </TableCell>
-
                                                 <TableCell
                                                     colSpan={3}
                                                     align="left"
@@ -385,9 +384,9 @@ export default function Listar() {
                                                     >
                                                         <option>selecione</option>
                                                         <option value={1}>visualisar</option>
-                                                        <option value={2}>Editar</option>
+                                                        {/* <option value={2}>Editar</option>
                                                         <option value={3}>Aprovar</option>
-                                                        <option value={4}>Recusar</option>
+                                                        <option value={4}>Recusar</option> */}
                                                     </CFormSelect>
                                                 </TableCell>
 
